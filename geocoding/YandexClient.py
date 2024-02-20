@@ -2,6 +2,7 @@ import requests
 
 from decimal import Decimal
 
+
 class Client:
 
     def __init__(self, api_key):
@@ -10,7 +11,7 @@ class Client:
     def _request(self, address: str) -> dict:
         response = requests.get(
             "https://geocode-maps.yandex.ru/1.x/",
-            params=dict(format="json", apikey=self.api_key, geocode=address),
+            params=dict(format="json", apikey=self.api_key, geocode=address, lang='ru_RU', ll='38.957643, 44.987749', spn='20, 20'),
         )
 
         if response.status_code == 200:
