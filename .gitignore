@@ -2,3 +2,4 @@
 .venv
 geocoding/constants.py
 database.db
+data_templates
