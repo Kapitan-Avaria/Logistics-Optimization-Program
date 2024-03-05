@@ -1,11 +1,11 @@
-from YandexClient import Client as YandexClient
-from constants import YANDEX_API_KEY
+from YandexGeoClient import YandexGeoClient as YandexClient
+from constants import YANDEX_GEO_API_KEY
 from database.db_sessions import get_coords, insert_coords, read_strings_input
 
 
 class GeocodingInterface:
 
-    geo_client = YandexClient(YANDEX_API_KEY)
+    geo_client = YandexClient(YANDEX_GEO_API_KEY)
     
     def get_coords_from_addresses(self, address):
         coords = get_coords(address)

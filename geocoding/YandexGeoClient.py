@@ -3,7 +3,7 @@ import requests
 from decimal import Decimal
 
 
-class Client:
+class YandexGeoClient:
 
     def __init__(self, api_key):
         self.api_key = api_key
