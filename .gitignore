@@ -1,6 +1,6 @@
 *__pycache__
 .venv
 .idea
-geocoding/constants.py
+constants.py
 database.db
 data_templates
