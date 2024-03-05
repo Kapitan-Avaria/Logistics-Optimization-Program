@@ -22,7 +22,7 @@ class YandexGeoClient:
         elif response.status_code == 403:
             raise Exception("403 Forbidden. Invalid API-key")
     
-    def coordinates(self, address: str) -> tuple:
+    def get_coordinates(self, address: str) -> tuple:
         data = self._request(address)["GeoObjectCollection"]["featureMember"]
 
         if not data:

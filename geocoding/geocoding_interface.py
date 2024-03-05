@@ -11,7 +11,7 @@ class GeocodingInterface:
         coords = get_coords(address)
 
         if coords is None:
-            lon, lat = self.geo_client.coordinates(address)
+            lon, lat = self.geo_client.get_coordinates(address)
             coords = (lat, lon)
             insert_coords(address, coords)
 
