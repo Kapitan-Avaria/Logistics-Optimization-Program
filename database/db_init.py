@@ -100,13 +100,21 @@ class Vehicle(Base):
     weight_capacity = Column(Integer)
 
 
-class Products(Base):
+class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     form_factor = Column(Integer, ForeignKey("form_factors.id"))
     dimensions = Column(JSON)   # spatial dimensions in the format corresponding to the form_factor
+
+
+class OrderProduct(Base):
+    __tablename__ = "orders_products"
+
+    order_id = Column(Integer, ForeignKey("orders.id"), primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
+    quantity = Column(Integer)
 
 
 class FormFactor(Base):
