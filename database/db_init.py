@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, ForeignKey, UniqueConstraint
+from sqlalchemy import create_engine, Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
@@ -100,6 +100,16 @@ class Vehicle(Base):
     weight_capacity = Column(Integer)
 
 
+class VehicleGeodata(Base):
+    __tablename__ = "vehicles_geodata"
+
+    id = Column(Integer, primary_key=True)
+    vehicle_id = Column(Integer, ForeignKey("vehicles.id"))
+    datetime = Column(DateTime)
+    latitude = Column(DECIMAL(9, 6))
+    longitude = Column(DECIMAL(9, 6))
+
+
 class Product(Base):
     __tablename__ = "products"
 
@@ -126,4 +136,3 @@ class FormFactor(Base):
 
 
 Base.metadata.create_all(engine)
-
