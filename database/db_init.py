@@ -96,7 +96,7 @@ class Vehicle(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     category = Column(String)
-    dimensions = Column(JSON)   # payload: depth, width, height; outer_dimensions: ...
+    dimensions = Column(JSON)   # inner: depth, width, height; outer_dimensions: ...
     weight_capacity = Column(Integer)
 
 
