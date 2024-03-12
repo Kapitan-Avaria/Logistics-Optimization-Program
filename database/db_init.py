@@ -67,7 +67,7 @@ class Order(Base):
     number = Column(String)
     client_id = Column(Integer, ForeignKey("clients.id"))
     address_id = Column(Integer, ForeignKey("addresses.id"))
-    date = Column(Date)
+    datetime = Column(DateTime)
     delivery_time_start = Column(Time)
     delivery_time_end = Column(Time)
 

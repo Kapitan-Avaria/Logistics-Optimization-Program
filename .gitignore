@@ -3,5 +3,5 @@
 .idea
 constants.py
 database.db
-data_templates
-drafts
+00 data_templates
+00 drafts

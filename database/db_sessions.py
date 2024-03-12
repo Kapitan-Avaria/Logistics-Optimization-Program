@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 from database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
-    VehicleGeodata, Segment
+    VehicleGeodata, Segment, SegmentStatistics
 from decimal import Decimal
 
 
@@ -109,7 +109,21 @@ def insert_segments(segments, session: Session):
 
 
 @use_with_session
-def get_coords_from_address(address_string, session: Session):
+def insert_segment_statistics(segment_id, route_duration, date, start_time, week_day, json_response, session: Session):
+    select_existing_object(
+        session,
+        SegmentStatistics,
+        segment_id=segment_id,
+        route_duration=route_duration,
+        date=date,
+        start_time=start_time,
+        week_day=week_day,
+        json_response=json_response
+    )
+
+
+@use_with_session
+def get_coords_from_db_address(address_string, session: Session):
     existing_address = select_existing_object(session, Address, string_address=address_string)
 
     coords = (existing_address.latitude, existing_address.longitude) \
