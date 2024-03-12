@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
-from database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, VehicleGeodata
+from database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
+    VehicleGeodata, Segment
 from decimal import Decimal
 
 
@@ -97,7 +98,18 @@ def insert_vehicle_geodata(data, session: Session):
 
 
 @use_with_session
-def get_coords(address_string, session: Session):
+def insert_segments(segments, session: Session):
+    for segment in segments:
+        existing_segment: Segment = select_existing_object(
+            session,
+            Segment,
+            address_1_id=segment[0],
+            address_2_id=segment[1]
+        )
+
+
+@use_with_session
+def get_coords_from_address(address_string, session: Session):
     existing_address = select_existing_object(session, Address, string_address=address_string)
 
     coords = (existing_address.latitude, existing_address.longitude) \
