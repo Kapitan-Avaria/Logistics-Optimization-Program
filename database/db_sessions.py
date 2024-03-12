@@ -118,7 +118,7 @@ def insert_segment_statistics(segment_id, route_duration, date, start_time, week
         date=date,
         start_time=start_time,
         week_day=week_day,
-        json_response=json_response
+        json_response=json_response     # Добавить в json поле source с вариантами "yandex", "osr", "real"
     )
 
 
