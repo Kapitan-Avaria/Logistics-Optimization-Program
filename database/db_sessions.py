@@ -10,7 +10,7 @@ def use_with_session(func):
 
     def wrapper(*args, **kwargs):
         # If existing session provided, continues with default function behaviour
-        if "session" in kwargs.keys():
+        if "session" in kwargs.keys() or isinstance(args[-1], Session):
             return func(*args, **kwargs)
 
         # If the session is not provided, creates new one
@@ -23,7 +23,7 @@ def use_with_session(func):
 
 
 @use_with_session
-def insert_orders(orders: list[dict], session: Session = None):
+def insert_orders(orders: list[dict], session: Session):
     for order in orders:
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
 
@@ -59,13 +59,13 @@ def insert_orders(orders: list[dict], session: Session = None):
 
 
 @use_with_session
-def insert_addresses(addresses: list, session: Session = None):
+def insert_addresses(addresses: list, session: Session):
     for address_string in addresses:
         select_existing_object(session, Address, string_address=address_string)
 
 
 @use_with_session
-def insert_vehicles(vehicles: list[dict], session: Session = None):
+def insert_vehicles(vehicles: list[dict], session: Session):
     for vehicle in vehicles:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle["name"])
         existing_vehicle.category = vehicle["category"]
@@ -74,7 +74,7 @@ def insert_vehicles(vehicles: list[dict], session: Session = None):
 
 
 @use_with_session
-def insert_products(products: list[dict], session: Session = None):
+def insert_products(products: list[dict], session: Session):
     for product in products:
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
         form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form-factor"])
@@ -83,7 +83,7 @@ def insert_products(products: list[dict], session: Session = None):
 
 
 @use_with_session
-def insert_vehicle_geodata(data, session: Session = None):
+def insert_vehicle_geodata(data, session: Session):
     for vehicle_data in data:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle_data["vehicle"])
         for record in vehicle_data["geodata"]:
@@ -96,9 +96,8 @@ def insert_vehicle_geodata(data, session: Session = None):
             session.add(new_data)
 
 
-
 @use_with_session
-def get_coords(address_string, session: Session = None):
+def get_coords(address_string, session: Session):
     existing_address = select_existing_object(session, Address, string_address=address_string)
 
     coords = (existing_address.latitude, existing_address.longitude) \
@@ -109,7 +108,7 @@ def get_coords(address_string, session: Session = None):
 
 
 @use_with_session
-def insert_coords(address_string, coords, session: Session = None):
+def insert_coords(address_string, coords, session: Session):
     existing_address = select_existing_object(session, Address, string_address=address_string)
 
     latitude, longitude = coords
