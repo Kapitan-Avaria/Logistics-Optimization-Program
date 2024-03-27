@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from routing_utils import unix_time_from_hour, get_unix_time_now
 
 
 class YandexRoutingClient:
@@ -32,22 +32,15 @@ class YandexRoutingClient:
         elif response.status_code == 504:
             raise Exception("504: Системная ошибка сервера. Повторите запрос с небольшой задержкой.")
 
-    @staticmethod
-    def unix_time_from_hour(hour):
-        dt = datetime.strptime(f"{hour}:00", "%H:%M")
-        dt_now = datetime.now()
-        dt = dt.replace(year=dt_now.year, month=dt_now.month, day=dt_now.day)
-        unix_time = int(dt.timestamp())
-        return unix_time
 
     def get_segments_data(self, origins: list[tuple[str, str]], destinations: list[tuple[str, str]], departure_hour: str = None):
         origins = '|'.join(map(','.join, origins))
         destinations = '|'.join(map(','.join, destinations))
 
         if departure_hour is not None:
-            departure_time = self.unix_time_from_hour(hour=departure_hour)
+            departure_time = unix_time_from_hour(hour=departure_hour)
         else:
-            departure_time = datetime.now().timestamp() + 30
+            departure_time = get_unix_time_now()
 
         data = self._request(origins, destinations, departure_time)
         res = dict()
@@ -63,5 +56,4 @@ class YandexRoutingClient:
                     "duration": int(segment["duration"]["value"])
                 }
         return res
-
 
