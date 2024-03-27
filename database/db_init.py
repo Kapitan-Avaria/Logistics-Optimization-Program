@@ -36,7 +36,7 @@ class Segment(Base):
     id = Column(Integer, primary_key=True)
     address_1_id = Column(Integer, ForeignKey("addresses.id"))
     address_2_id = Column(Integer, ForeignKey("addresses.id"))
-    length = Column(Float)
+    direct_distance = Column(Float)
 
     __table_args__ = (UniqueConstraint('address_1_id', 'address_2_id', name='_segment_uc'),)
 
@@ -46,7 +46,8 @@ class SegmentStatistics(Base):
 
     segment_id = Column(Integer, ForeignKey("segments.id"), primary_key=True)
     record_id = Column(Integer, primary_key=True)
-    route_duration = Column(Integer)
+    distance = Column(Integer)
+    duration = Column(Integer)
     date = Column(Date)
     start_time = Column(Time)
     week_day = Column(Integer)

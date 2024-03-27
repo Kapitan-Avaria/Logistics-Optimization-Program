@@ -3,6 +3,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
     VehicleGeodata, Segment, SegmentStatistics
 from decimal import Decimal
+import numpy as np
 
 
 def use_with_session(func):
@@ -11,7 +12,7 @@ def use_with_session(func):
 
     def wrapper(*args, **kwargs):
         # If existing session provided, continues with default function behaviour
-        if "session" in kwargs.keys() or isinstance(args[-1], Session):
+        if "session" in kwargs.keys() or (isinstance(args[-1], Session) if len(args) > 0 else False):
             return func(*args, **kwargs)
 
         # If the session is not provided, creates new one
@@ -66,6 +67,69 @@ def insert_addresses(addresses: list, session: Session):
 
 
 @use_with_session
+def insert_segments_where_lacking(required_segments_number, session: Session):
+    addresses = session.query(Address).all()
+    for address in addresses:
+        segments = session.query(Segment).filter_by(address_1_id=address.id).all()
+        segments_number = len(segments)
+        # If there are enough outgoing segments, skip the address
+        if segments_number >= required_segments_number:
+            continue
+
+        # Calc direct distances from this address to another
+        direct_distances = calc_direct_distances(
+            address.latitude,
+            address.longitude,
+            np.array([address_2.latitude for address_2 in addresses]),
+            np.array([address_2.longitude for address_2 in addresses])
+        )
+        sorted_indices = direct_distances.argsort()
+
+        for i in sorted_indices:
+            if address.id == addresses[i].id:
+                continue
+
+            segment_exists = bool(
+                session.query(Segment).filter_by(
+                    address_1_id=address.id,
+                    address_2_id=addresses[i].id
+                ).all()
+            )
+
+            if segment_exists:
+                continue
+
+            select_existing_object(
+                session,
+                Segment,
+                address_1_id=address.id,
+                address_2_id=addresses[i].id,
+                direct_distance=direct_distances[i]
+            )
+            segments_number += 1
+
+            if segments_number >= required_segments_number:
+                break
+
+
+def calc_direct_distances(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray):
+    """
+    Calculate the great circle distance in kilometers between two points
+    on the earth (specified in decimal degrees)
+    """
+    # Convert decimal degrees to radians
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arcsin(np.sqrt(a))
+    r = 6371 * 1000  # Radius of earth in meters.
+    return c * r
+
+
+@use_with_session
 def insert_vehicles(vehicles: list[dict], session: Session):
     for vehicle in vehicles:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle["name"])
@@ -109,16 +173,17 @@ def insert_segments(segments, session: Session):
 
 
 @use_with_session
-def insert_segment_statistics(segment_id, route_duration, date, start_time, week_day, json_response, session: Session):
+def insert_segment_statistics(segment_id, route_distance, route_duration, date, start_time, week_day, json_response, session: Session):
     select_existing_object(
         session,
         SegmentStatistics,
         segment_id=segment_id,
-        route_duration=route_duration,
+        distance=route_distance,
+        duration=route_duration,
         date=date,
         start_time=start_time,
         week_day=week_day,
-        json_response=json_response     # Добавить в json поле source с вариантами "yandex", "osr", "real"
+        json_response=json_response     # Добавить в json поле source с вариантами "yandex", "ors", "real"
     )
 
 
@@ -143,7 +208,7 @@ def insert_coords(address_string, coords, session: Session):
     existing_address.longitude = longitude
 
 
-def select_existing_object(session, class_name, **kwargs):
+def select_existing_object(session: Session, class_name, **kwargs):
     for key in kwargs.keys():
         if isinstance(kwargs[key], str):
             kwargs[key] = regularize(kwargs[key])
@@ -155,7 +220,7 @@ def select_existing_object(session, class_name, **kwargs):
         new_object = class_name(**kwargs)
         session.add(new_object)
         existing_object = new_object
-    session.commit()
+    session.flush()
     return existing_object
 
 
