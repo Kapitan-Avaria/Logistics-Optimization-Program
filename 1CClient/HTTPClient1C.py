@@ -7,27 +7,26 @@ class HTTPClient1C:
         self.url = url + '/hs/'
 
     def get_archived_orders(self):
-        return requests.get(self.url + 'orders/get_archived_orders')
+        return requests.get(self.url + 'orders/get_archived_orders').json()
 
     def get_available_orders(self):
-        return requests.get(self.url + 'orders/get_available_orders')
+        return requests.get(self.url + 'orders/get_available_orders').json()
 
     def get_all_products(self):
-        return requests.get(self.url + 'products/get_all_products')
+        return requests.get(self.url + 'products/get_all_products').json()
 
     def get_product_by_name(self, name):
-        return requests.get(self.url + f'products/get_product_by_name/{name}')
+        return requests.get(self.url + f'products/get_product_by_name/{name}').json()
 
     def get_all_vehicles(self):
-        return requests.get(self.url + 'vehicles/get_all_vehicles')
+        return requests.get(self.url + 'vehicles/get_all_vehicles').json()
 
     def get_vehicle(self, name):
-        return requests.get(self.url + f'vehicles/get_vehicle/{name}')
+        return requests.get(self.url + f'vehicles/get_vehicle/{name}').json()
 
     def get_available_vehicles(self):
-        return requests.get(self.url + 'vehicles/get_available_vehicles')
+        return requests.get(self.url + 'vehicles/get_available_vehicles').json()
 
     def get_vehicles_geodata(self, date):
-        return requests.get(self.url + f'vehicles/get_geodata/{date}')
-
+        return requests.get(self.url + f'vehicles/get_geodata/{date}').json()
 
