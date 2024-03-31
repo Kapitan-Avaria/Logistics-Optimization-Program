@@ -71,6 +71,7 @@ class Order(Base):
     datetime = Column(DateTime)
     delivery_time_start = Column(Time)
     delivery_time_end = Column(Time)
+    status = Column(Integer)
 
 
 class Client(Base):

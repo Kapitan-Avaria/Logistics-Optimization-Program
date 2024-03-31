@@ -48,6 +48,8 @@ def insert_orders(orders: list[dict], session: Session):
         existing_order.delivery_time_start = order["delivery-time-start"]
         existing_order.delivery_time_end = order["delivery-time-end"]
 
+        existing_order.status = 0
+
         if "products" in order.keys():
             for prd in order["products"]:
                 product: Product = select_existing_object(session, Product, name=prd["name"])
