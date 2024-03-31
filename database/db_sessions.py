@@ -80,10 +80,10 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
 
         # Calc direct distances from this address to another
         direct_distances = calc_direct_distances(
-            address.latitude,
-            address.longitude,
-            np.array([address_2.latitude for address_2 in addresses]),
-            np.array([address_2.longitude for address_2 in addresses])
+            np.array(float(address.latitude)),
+            np.array(float(address.longitude)),
+            np.array([float(address_2.latitude) for address_2 in addresses]),
+            np.array([float(address_2.longitude) for address_2 in addresses])
         )
         sorted_indices = direct_distances.argsort()
 
@@ -114,13 +114,17 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
                 break
 
 
-def calc_direct_distances(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray):
+def calc_direct_distances(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray) -> np.ndarray:
     """
     Calculate the great circle distance in kilometers between two points
     on the earth (specified in decimal degrees)
     """
     # Convert decimal degrees to radians
-    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    # lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    lat1 = np.radians(lat1)
+    lon1 = np.radians(lon1)
+    lat2 = np.radians(lat2)
+    lon2 = np.radians(lon2)
 
     # Haversine formula
     dlon = lon2 - lon1
