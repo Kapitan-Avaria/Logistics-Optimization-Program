@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
 
-engine = create_engine("sqlite+pysqlite:///../database.db")
+engine = create_engine("sqlite+pysqlite:///C:/Data and Projects/ООО Вершина/Logistics-Optimization-Program/database.db")
 
 if not database_exists(engine.url):
     create_database(engine.url)
