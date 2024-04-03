@@ -10,7 +10,7 @@ class GeocodingInterface:
     }
     
     def get_coords_from_addresses(self, address):
-        coords = get_coords_from_db_address(address)
+        coords = get_coords_from_db_address(address_string=address)
 
         if coords is None:
             lon, lat = self.geo_clients["yandex"].get_coordinates(address)

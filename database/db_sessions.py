@@ -12,7 +12,7 @@ def use_with_session(func):
 
     def wrapper(*args, **kwargs):
         # If existing session provided, continues with default function behaviour
-        if "session" in kwargs.keys() or (isinstance(args[-1], Session) if len(args) > 0 else False):
+        if "session" in kwargs.keys() or (True in map(lambda x: isinstance(x, Session), args) if len(args) > 0 else False):
             return func(*args, **kwargs)
 
         # If the session is not provided, creates new one
@@ -179,6 +179,20 @@ def insert_segments(segments, session: Session):
 
 
 @use_with_session
+def get_all_segments(session: Session):
+    segments = select_many_objects(session, Segment)
+    res = [
+        {
+            "id": s.id,
+            "address_1_id": s.address_1_id,
+            "address_2_id": s.address_2_id,
+            "direct_distance": s.direct_distance
+        } for s in segments
+    ]
+    return res
+
+
+@use_with_session
 def insert_segment_statistics(segment_id, route_distance, route_duration, date, start_time, week_day, json_response, session: Session):
     select_existing_object(
         session,
@@ -194,14 +208,23 @@ def insert_segment_statistics(segment_id, route_distance, route_duration, date, 
 
 
 @use_with_session
-def get_coords_from_db_address(address_string, session: Session):
-    existing_address = select_existing_object(session, Address, string_address=address_string)
+def get_coords_from_db_address(session: Session, **kwargs):
+    existing_address = select_existing_object(session, Address, **kwargs)
 
-    coords = (existing_address.latitude, existing_address.longitude) \
-        if (existing_address.latitude is not None and existing_address.latitude is not None) \
+    coords = (float(existing_address.longitude), float(existing_address.latitude)) \
+        if (existing_address.longitude is not None and existing_address.latitude is not None) \
         else None
 
     return coords
+
+
+@use_with_session
+def get_many_coords_from_db_addresses(ids: list, session: Session):
+    res = dict()
+    for address_id in ids:
+        coords = get_coords_from_db_address(session, id=address_id)
+        res[address_id] = coords
+    return res
 
 
 @use_with_session
@@ -228,6 +251,17 @@ def select_existing_object(session: Session, class_name, **kwargs):
         existing_object = new_object
     session.flush()
     return existing_object
+
+
+def select_many_objects(session: Session, class_name, **kwargs):
+    for key in kwargs.keys():
+        if isinstance(kwargs[key], str):
+            kwargs[key] = regularize(kwargs[key])
+
+    q = session.query(class_name).filter_by(**kwargs)
+    objects = q.all()
+
+    return objects
 
 
 def read_strings_input():
