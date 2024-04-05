@@ -1,5 +1,4 @@
-from database.db_sessions import insert_segment_statistics
-from database.db_init import Segment
+from source.database.db_sessions import insert_segment_statistics
 
 
 def build_url(start_coords, end_coords, time):

@@ -4,7 +4,7 @@ import sys
 import os
 import pygame
 
-from database.db_sessions import calc_direct_distances, get_all_segments, get_many_coords_from_db_addresses
+from source.database.db_sessions import calc_direct_distances, get_all_segments, get_many_coords_from_db_addresses
 
 
 map_w = 600

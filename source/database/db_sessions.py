@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
-from database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
+from source.database.db_init import engine, Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
     VehicleGeodata, Segment, SegmentStatistics
 from decimal import Decimal
 import numpy as np

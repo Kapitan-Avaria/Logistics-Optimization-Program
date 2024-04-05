@@ -1,6 +1,6 @@
 from YandexGeoClient import YandexGeoClient
-from constants import YANDEX_GEO_API_KEY
-from database.db_sessions import get_coords_from_db_address, insert_coords, read_strings_input
+from source.constants import YANDEX_GEO_API_KEY
+from source.database.db_sessions import get_coords_from_db_address, insert_coords, read_strings_input
 
 
 class GeocodingInterface:
