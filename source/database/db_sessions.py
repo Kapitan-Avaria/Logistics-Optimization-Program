@@ -63,6 +63,13 @@ def insert_orders(orders: list[dict], session: Session):
 
 
 @use_with_session
+def get_orders(session: Session, **kwargs):
+    orders = select_many_objects(session, Order, **kwargs)
+    res = [extract_object_as_dict(order) for order in orders]
+    return res
+
+
+@use_with_session
 def insert_addresses(addresses: list, session: Session):
     for address_string in addresses:
         select_existing_object(session, Address, string_address=address_string)
@@ -181,14 +188,7 @@ def insert_segments(segments, session: Session):
 @use_with_session
 def get_all_segments(session: Session):
     segments = select_many_objects(session, Segment)
-    res = [
-        {
-            "id": s.id,
-            "address_1_id": s.address_1_id,
-            "address_2_id": s.address_2_id,
-            "direct_distance": s.direct_distance
-        } for s in segments
-    ]
+    res = [extract_object_as_dict(s) for s in segments]
     return res
 
 
@@ -235,6 +235,12 @@ def insert_coords(address_string, coords, session: Session):
 
     existing_address.latitude = latitude
     existing_address.longitude = longitude
+
+
+def extract_object_as_dict(obj):
+    res: dict = obj.__dict__
+    res.pop('_sa_instance_state', None)
+    return res
 
 
 def select_existing_object(session: Session, class_name, **kwargs):
