@@ -70,6 +70,20 @@ def get_orders(session: Session, **kwargs):
 
 
 @use_with_session
+def get_order_products(session: Session, order_id):
+    products = select_many_objects(session, OrderProduct, order_id=order_id)
+    res = [extract_object_as_dict(product) for product in products]
+    return res
+
+
+@use_with_session
+def get_product(session: Session, product_id):
+    product = select_existing_object(session, Product, id=product_id)
+    res = extract_object_as_dict(product)
+    return res
+
+
+@use_with_session
 def insert_addresses(addresses: list, session: Session):
     for address_string in addresses:
         select_existing_object(session, Address, string_address=address_string)
