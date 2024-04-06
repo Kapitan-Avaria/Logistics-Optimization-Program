@@ -1,6 +1,7 @@
 from YandexGeoClient import YandexGeoClient
 from source.constants import YANDEX_GEO_API_KEY
-from source.database.db_sessions import get_coords_from_db_address, insert_coords, read_strings_input
+from source.database.db_sessions import get_coords_from_db_address, insert_coords
+from time import sleep
 
 
 class GeocodingInterface:
@@ -19,10 +20,8 @@ class GeocodingInterface:
 
         return coords
 
-    def geocode_bulk(self, addresses):
+    def geocode_bulk(self, addresses, time_interval_seconds=1):
         for address in addresses:
             coords = self.get_coords_from_addresses(address)
+            sleep(time_interval_seconds)
 
-
-gi = GeocodingInterface()
-gi.geocode_bulk(read_strings_input())
