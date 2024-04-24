@@ -5,13 +5,16 @@ from source.database.db_init import Address, Order, DeliveryZone, Client, Produc
 from decimal import Decimal
 import numpy as np
 
-from db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
+from source.database.db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
 
 
 @use_with_session
 def get_objects(session: Session, **kwargs):
-    objects = select_many_objects(session, kwargs['class_name'], **kwargs)
+    class_name = kwargs['class_name']
+    kwargs.pop("class_name", None)
+    objects = select_many_objects(session, class_name, **kwargs)
     res = [extract_object_as_dict(obj) for obj in objects]
+
     return res
 
 

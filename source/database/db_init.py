@@ -44,8 +44,8 @@ class Segment(Base):
 class SegmentStatistics(Base):
     __tablename__ = "segment_statistics"
 
-    segment_id = Column(Integer, ForeignKey("segments.id"), primary_key=True)
     record_id = Column(Integer, primary_key=True)
+    segment_id = Column(Integer, ForeignKey("segments.id"))
     distance = Column(Integer)
     duration = Column(Integer)
     date = Column(Date)
