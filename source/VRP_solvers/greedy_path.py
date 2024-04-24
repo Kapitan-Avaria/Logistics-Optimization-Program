@@ -5,7 +5,9 @@ def greedy_path(addresses_ids, capacity):
     nodes = [i for i in range(1, len(node_address_map.keys())+1)]
     path = [0]
     cur_point = 0
+
     total_travel_time = 0
+    total_volume = 0
 
     while len(nodes) > 0:
         min_distance = 1e7
