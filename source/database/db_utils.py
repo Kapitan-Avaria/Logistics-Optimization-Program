@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
 from source.database.db_init import engine
+import numpy as np
 
 
 def use_with_session(func):
@@ -53,6 +54,27 @@ def select_many_objects(session: Session, class_name, **kwargs):
     objects = q.all()
 
     return objects
+
+
+def calc_direct_distances(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray) -> np.ndarray:
+    """
+    Calculate the great circle distance in kilometers between two points
+    on the earth (specified in decimal degrees)
+    """
+    # Convert decimal degrees to radians
+    # lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    lat1 = np.radians(lat1)
+    lon1 = np.radians(lon1)
+    lat2 = np.radians(lat2)
+    lon2 = np.radians(lon2)
+
+    # Haversine formula
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arcsin(np.sqrt(a))
+    r = 6371 * 1000  # Radius of earth in meters.
+    return c * r
 
 
 def read_strings_input():

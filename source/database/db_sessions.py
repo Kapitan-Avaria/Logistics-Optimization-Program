@@ -5,7 +5,7 @@ from source.database.db_init import Address, Order, DeliveryZone, Client, Produc
 from decimal import Decimal
 import numpy as np
 
-from db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict
+from db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
 
 
 @use_with_session
@@ -103,27 +103,6 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
 
             if segments_number >= required_segments_number:
                 break
-
-
-def calc_direct_distances(lat1: np.ndarray, lon1: np.ndarray, lat2: np.ndarray, lon2: np.ndarray) -> np.ndarray:
-    """
-    Calculate the great circle distance in kilometers between two points
-    on the earth (specified in decimal degrees)
-    """
-    # Convert decimal degrees to radians
-    # lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
-    lat1 = np.radians(lat1)
-    lon1 = np.radians(lon1)
-    lat2 = np.radians(lat2)
-    lon2 = np.radians(lon2)
-
-    # Haversine formula
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = np.sin(dlat / 2) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
-    c = 2 * np.arcsin(np.sqrt(a))
-    r = 6371 * 1000  # Radius of earth in meters.
-    return c * r
 
 
 @use_with_session
