@@ -1,6 +1,7 @@
 from YandexGeoClient import YandexGeoClient
 from source.constants import YANDEX_GEO_API_KEY
-from source.database.db_sessions import get_coords_from_db_address, insert_coords
+from source.database.db_init import Address
+from source.database.db_sessions import insert_coords, get_objects
 from time import sleep
 
 
@@ -11,11 +12,13 @@ class GeocodingInterface:
     }
     
     def get_coords_from_addresses(self, address):
-        coords = get_coords_from_db_address(address_string=address)
+        address_object = get_objects(class_name=Address, address_string=address)[0]
+        coords = (float(address_object['longitude']), float(address_object['latitude'])) \
+            if (address_object['longitude'] is not None and address_object['latitude'] is not None) \
+            else None
 
         if coords is None:
-            lon, lat = self.geo_clients["yandex"].get_coordinates(address)
-            coords = (lat, lon)
+            coords = self.geo_clients["yandex"].get_coordinates(address)
             insert_coords(address, coords)
 
         return coords

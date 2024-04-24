@@ -4,7 +4,8 @@ import sys
 import os
 import pygame
 
-from source.database.db_sessions import calc_direct_distances, get_all_segments, get_many_coords_from_db_addresses
+from source.database.db_init import Segment
+from source.database.db_sessions import calc_direct_distances, get_many_coords_from_db_addresses, get_objects
 
 
 map_w = 600
@@ -101,7 +102,7 @@ def draw_map_rough():
     distances = dict()
     coords_dict = dict()
 
-    segments = get_all_segments()
+    segments = get_objects(class_name=Segment)
     for segment in segments:
         id_1 = segment["address_1_id"]
         id_2 = segment["address_2_id"]
@@ -110,6 +111,7 @@ def draw_map_rough():
         distances[(id_1, id_2)] = segment["direct_distance"]
 
     coords_dict = get_many_coords_from_db_addresses(coords_dict.keys())
+
     pixel_coords = geocoord_to_map_pixels_rough(np.array(list(coords_dict.values()))).tolist()
     pixel_coords_dict = dict(zip(coords_dict.keys(), pixel_coords))
 

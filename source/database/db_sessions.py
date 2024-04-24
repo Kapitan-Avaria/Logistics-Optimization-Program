@@ -25,6 +25,13 @@ def use_with_session(func):
 
 
 @use_with_session
+def get_objects(session: Session, **kwargs):
+    objects = select_many_objects(session, kwargs['class_name'], **kwargs)
+    res = [extract_object_as_dict(obj) for obj in objects]
+    return res
+
+
+@use_with_session
 def insert_orders(orders: list[dict], session: Session):
     for order in orders:
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
@@ -60,27 +67,6 @@ def insert_orders(orders: list[dict], session: Session):
                     product_id=product.id
                 )
                 product_in_order.quantity = prd["quantity"]
-
-
-@use_with_session
-def get_orders(session: Session, **kwargs):
-    orders = select_many_objects(session, Order, **kwargs)
-    res = [extract_object_as_dict(order) for order in orders]
-    return res
-
-
-@use_with_session
-def get_order_products(session: Session, order_id):
-    products = select_many_objects(session, OrderProduct, order_id=order_id)
-    res = [extract_object_as_dict(product) for product in products]
-    return res
-
-
-@use_with_session
-def get_product(session: Session, product_id):
-    product = select_existing_object(session, Product, id=product_id)
-    res = extract_object_as_dict(product)
-    return res
 
 
 @use_with_session
@@ -200,13 +186,6 @@ def insert_segments(segments, session: Session):
 
 
 @use_with_session
-def get_all_segments(session: Session):
-    segments = select_many_objects(session, Segment)
-    res = [extract_object_as_dict(s) for s in segments]
-    return res
-
-
-@use_with_session
 def insert_segment_statistics(segment_id, route_distance, route_duration, date, start_time, week_day, json_response, session: Session):
     select_existing_object(
         session,
@@ -245,7 +224,7 @@ def get_many_coords_from_db_addresses(ids: list, session: Session):
 def insert_coords(address_string, coords, session: Session):
     existing_address = select_existing_object(session, Address, string_address=address_string)
 
-    latitude, longitude = coords
+    longitude, latitude = coords
 
     existing_address.latitude = latitude
     existing_address.longitude = longitude
