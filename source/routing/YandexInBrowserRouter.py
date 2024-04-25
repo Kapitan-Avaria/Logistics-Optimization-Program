@@ -25,11 +25,18 @@ class YandexInBrowserRouter:
             self.driver.get(url)
             time = self.driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-duration").text
             dist = self.driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-subtitle").text
-
+            print(time, dist)
             insert_data(segment_id, dist, time, date, t)
             sleep(1)
             
 
-
 if __name__ == '__main__':
-    pass
+    from source.database.db_init import Segment
+    from source.database.db_sessions import get_objects
+    from datetime import datetime, timedelta
+    from yandex_in_browser_routing_tools import generate_urls_bulk
+    segments = get_objects(class_name=Segment)
+    dates_list = [(datetime.now() + timedelta(days=1)).date()]
+    times_list = [i for i in range(6, 24)]
+    urls = generate_urls_bulk(segments, dates_list, times_list)
+    print(urls)

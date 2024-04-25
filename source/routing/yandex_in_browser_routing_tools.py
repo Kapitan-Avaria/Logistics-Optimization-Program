@@ -84,9 +84,3 @@ def generate_urls_bulk(segments: list[Segment], dates_list: list, times_list: li
                 
     return urls_to_parse
 
-
-if __name__ == '__main__':
-    segments = get_objects(class_name=Segment)
-    dates_list = [(datetime.now() + timedelta(days=1)).date()]
-    times_list = [i for i in range(6, 24)]
-    generate_urls_bulk(segments, dates_list, times_list)
