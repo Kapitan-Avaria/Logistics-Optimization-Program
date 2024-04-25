@@ -1,28 +1,35 @@
 from selenium import webdriver
-from selenium.common import NoSuchElementException, TimeoutException
-from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
-from selenium.webdriver.support.wait import WebDriverWait
+
+from yandex_in_browser_routing_tools import insert_data
+from time import sleep
 
 
-def create_new_driver() -> WebDriver:
+def create_new_driver(show=False) -> WebDriver:
     options = webdriver.FirefoxOptions()
 
-    SHOW = False
-    if not SHOW:
+    if not show:
         options.add_argument("-headless")
 
     new_driver = webdriver.Firefox(options=options)
     return new_driver
 
 
-if __name__ == '__main__':
-    driver = create_new_driver()
-    url = 'https://yandex.ru/maps/?mode=routes&routes[timeDependent][time]=2024-04-25T11%3A00%3A00&rtext=45.055403%2C39.048050~45.057861%2C39.034099&rtt=auto'
-    driver.get(url)
+class YandexInBrowserRouter:
+    def __init__(self):
+        self.driver = create_new_driver()
 
-    res_time = driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-duration").text
-    res_dist = driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-subtitle").text
-    print(res_time)
-    print(res_dist)
+    def parse_urls(self, urls):
+        for url, date, t, segment_id in urls:
+            self.driver.get(url)
+            time = self.driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-duration").text
+            dist = self.driver.find_element(By.CLASS_NAME, "auto-route-snippet-view__route-subtitle").text
+
+            insert_data(segment_id, dist, time, date, t)
+            sleep(1)
+            
+
+
+if __name__ == '__main__':
+    pass
