@@ -63,6 +63,16 @@ def insert_data(segment_id, dist_row, time_row, date, start_hour):
     )
 
 
+def optimize_times_list(segment: Segment, times_list: list[int]):
+    if segment["direct_distance"] < 1000:
+        t_list = [8]
+    elif segment["direct_distance"] < 2000:
+        t_list = [8, 23]
+    else:
+        t_list = times_list.copy()
+    return t_list
+
+
 def generate_urls_bulk(segments: list[Segment], dates_list: list, times_list: list[int]):
     urls_to_parse = []
     for segment in segments:
@@ -70,6 +80,9 @@ def generate_urls_bulk(segments: list[Segment], dates_list: list, times_list: li
         address_2 = get_objects(class_name=Address, id=segment['address_2_id'])[0]
         start_coords = _build_coord_string(address_1['latitude'], address_1['longitude'])
         end_coords = _build_coord_string(address_2['latitude'], address_2['longitude'])
+
+        times_list = optimize_times_list(segment, times_list)
+
         for date in dates_list:
             for t in times_list:
                 if t < 10:
