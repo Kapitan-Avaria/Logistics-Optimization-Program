@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from source.database.db_init import Segment, Address
-from source.database.db_sessions import get_objects, insert_segment_statistics
+from source.database.db_queries import get_objects, insert_segment_statistics
 
 
 def _build_url(start_coords, end_coords, date, time):

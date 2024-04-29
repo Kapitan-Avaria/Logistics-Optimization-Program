@@ -1,5 +1,5 @@
 import pandas as pd
-from db_sessions import get_objects
+from db_queries import get_objects
 from db_init import SegmentStatistics
 
 
