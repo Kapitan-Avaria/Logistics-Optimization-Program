@@ -1,6 +1,6 @@
 from source.database.db_init import Order, OrderProduct, Product, Vehicle, Address
 from source.database.db_sessions import get_objects
-from source.Client1C.HTTPClient1C import HTTPClient1C
+from source.Client1C.http_client_1c import HTTPClient1C
 from math import cos, pi
 
 
