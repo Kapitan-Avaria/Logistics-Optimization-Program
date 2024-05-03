@@ -2,7 +2,7 @@ from source.database.db_init import Order, OrderProduct, Product, Vehicle, Addre
 from source.database.db_queries import get_objects
 from source.Client1C.http_client_1c import HTTPClient1C
 from math import cos, pi
-from ortools_hfcvrptw_ import create_data_model, solve
+from ortools_vrp_solver import create_data_model, solve
 
 
 def load_orders():
