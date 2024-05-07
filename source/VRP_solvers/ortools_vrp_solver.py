@@ -212,6 +212,62 @@ def print_solution(
 # [END solution_printer]
 
 
+def save_solution_to_dict(data, manager, routing, assignment):
+    """Saves assignment to dict."""
+    solution = dict()
+    solution["objective"] = assignment.ObjectiveValue()
+    solution["routes"] = []
+
+    total_distance = 0
+    total_load = 0
+    total_time = 0
+    capacity_dimension = routing.GetDimensionOrDie("Capacity")
+    time_dimension = routing.GetDimensionOrDie("Time")
+    for vehicle_id in range(data["num_vehicles"]):
+        index = routing.Start(vehicle_id)
+        route = dict()
+        route["vehicle_id"] = vehicle_id
+        route["path"] = []
+        distance = 0
+        while not routing.IsEnd(index):
+            load_var = capacity_dimension.CumulVar(index)
+            time_var = time_dimension.CumulVar(index)
+            slack_var = time_dimension.SlackVar(index)
+            node = manager.IndexToNode(index)
+
+            route["path"].append({
+                "node":  node,
+                "delivered": assignment.Value(load_var),
+                "time": (assignment.Min(time_var), assignment.Max(time_var)),
+                "slack": (assignment.Min(slack_var), assignment.Max(slack_var))
+            })
+
+            previous_index = index
+            index = assignment.Value(routing.NextVar(index))
+            distance += routing.GetArcCostForVehicle(previous_index, index, vehicle_id)
+        load_var = capacity_dimension.CumulVar(index)
+        time_var = time_dimension.CumulVar(index)
+        node = manager.IndexToNode(index)
+        route["path"].append({
+            "node":  node,
+            "delivered": assignment.Value(load_var),
+            "time": (assignment.Min(time_var), assignment.Max(time_var)),
+        })
+        route["distance"] = distance
+        route["load"] = assignment.Value(load_var)
+        route["time"] = assignment.Value(time_var)
+        solution["routes"].append(route)
+
+        total_distance += distance
+        total_load += assignment.Value(load_var)
+        total_time += assignment.Value(time_var)
+
+    solution["total_distance"] = total_distance
+    solution["total_load"] = total_load
+    solution["total_time"] = total_time
+    return solution
+
+
 def solve(data):
     """Entry point of the program."""
 
@@ -258,6 +314,7 @@ def solve(data):
     # [START print_solution]
     if assignment:
         print_solution(data, manager, routing, assignment)
+        return save_solution_to_dict(data, manager, routing, assignment)
     else:
         print("No solution found!")
     # [END print_solution]
