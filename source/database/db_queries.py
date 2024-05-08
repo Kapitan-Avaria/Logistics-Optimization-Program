@@ -32,10 +32,13 @@ def insert_orders(orders: list[dict], session: Session):
             address = insert_address_from_order(order, session)
             existing_order.address_id = address.id
 
-        existing_order.delivery_time_start = order["delivery-time-start"]
-        existing_order.delivery_time_end = order["delivery-time-end"]
+        if existing_order.delivery_time_start is None and order["delivery-time-start"]:
+            existing_order.delivery_time_start = order["delivery-time-start"]
+        if existing_order.delivery_time_end is None and order["delivery-time-end"]:
+            existing_order.delivery_time_end = order["delivery-time-end"]
 
-        existing_order.status = 0
+        if existing_order.status is None and order["status"]:
+            existing_order.status = order["status"]
 
         if "products" in order.keys():
             for prd in order["products"]:

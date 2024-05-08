@@ -13,13 +13,9 @@ class VRPWrapper:
     orders: list
     vehicles: list
 
-    def __init__(self, url):
-        self.url = url
-        self.client1c = HTTPClient1C(url)
-
-    def run(self):
-        self._load_orders()
-        self._load_vehicles()
+    def run(self, orders, available_vehicles):
+        self._load_orders(orders)
+        self._load_vehicles(available_vehicles)
         self._assign_vehicles_to_zones()
         solutions = self._solve_vrp_for_each_zone()
         return solutions
@@ -102,12 +98,10 @@ class VRPWrapper:
                     durations[(from_node, to_node)] = avg_time
         return distances, durations
 
-    def _load_orders(self):
+    def _load_orders(self, orders):
         self.address_to_order_contents = dict()
         self.zones_to_addresses = dict()
-
-        # Load available orders from the database
-        self.orders = get_objects(class_name=Order, status=0)
+        self.orders = orders
 
         # Loop through each order
         for order in self.orders:
@@ -138,10 +132,7 @@ class VRPWrapper:
                 self.zones_to_addresses[zone_id].append(address_id)
             self.address_to_order_contents[address_id] = order_content
 
-    def _load_vehicles(self):
-        # Load available vehicles from 1C
-        available_vehicles = self.client1c.get_available_vehicles()
-
+    def _load_vehicles(self, available_vehicles):
         self.vehicles = []
         for av_vehicle in available_vehicles["vehicles"]:
             vehicle = get_objects(class_name=Vehicle, name=av_vehicle["name"])[0]

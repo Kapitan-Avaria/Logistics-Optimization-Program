@@ -10,6 +10,7 @@ engine = None
 
 def db_init(db_path: Path):
     global engine
+    is_empty = False
 
     if not db_path.parent.exists():
         raise Exception("You need to set db file name")
@@ -18,8 +19,11 @@ def db_init(db_path: Path):
 
     if not database_exists(engine.url):
         create_database(engine.url)
+        is_empty = True
     print(database_exists(engine.url))
 
     import __all_models
 
     Base.metadata.create_all(engine)
+
+    return is_empty
