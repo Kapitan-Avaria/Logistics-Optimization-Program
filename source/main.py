@@ -2,6 +2,7 @@ from database.db_models import *
 from database.db_queries import *
 from Client1C.http_client_1c import HTTPClient1C
 from geocoding.geocoding_interface import GeocodingInterface
+from pathlib import Path
 
 
 def first_data_load(url):
@@ -20,6 +21,7 @@ def first_data_load(url):
 
 
 if __name__ == '__main__':
+    db_path = Path().resolve() / 'database.db'
     url_1c = ''
     first_data_load(url_1c)
 

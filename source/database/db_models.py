@@ -1,16 +1,5 @@
-from sqlalchemy import create_engine, Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import declarative_base
-from sqlalchemy_utils import database_exists, create_database
-
-path = "C:/Data and Projects/ООО Вершина/Logistics-Optimization-Program"
-engine = create_engine(f"sqlite+pysqlite:///{path}/database.db")
-
-if not database_exists(engine.url):
-    create_database(engine.url)
-print(database_exists(engine.url))
-
-
-Base = declarative_base()
+from sqlalchemy import Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
+from db_init import Base
 
 
 class Address(Base):
@@ -136,5 +125,3 @@ class FormFactor(Base):
     name = Column(String, unique=True)
     dimensions_template = Column(JSON)
 
-
-Base.metadata.create_all(engine)

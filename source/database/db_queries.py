@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
-
-from source.database.db_models import Address, Order, DeliveryZone, Client, Product, OrderProduct, Vehicle, FormFactor, \
-    VehicleGeodata, Segment, SegmentStatistics
 from decimal import Decimal
 import numpy as np
 
+from source.database.__all_models import *
 from source.database.db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
 
 
