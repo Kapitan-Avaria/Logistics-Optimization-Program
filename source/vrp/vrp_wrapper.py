@@ -1,6 +1,6 @@
 from source.database.db_models import Order, OrderProduct, Product, Vehicle, Address, Segment, SegmentStatistics
 from source.database.db_queries import get_objects
-from source.Client1C.http_client_1c import HTTPClient1C
+from source.client_1c.http_client_1c import HTTPClient1C
 from math import cos, pi
 from ortools_vrp_solver import create_data_model, solve
 
@@ -21,7 +21,8 @@ class VRPWrapper:
         self._load_orders()
         self._load_vehicles()
         self._assign_vehicles_to_zones()
-        self._solve_vrp_for_each_zone()
+        solutions = self._solve_vrp_for_each_zone()
+        return solutions
 
     def _solve_vrp_for_each_zone(self):
         """
