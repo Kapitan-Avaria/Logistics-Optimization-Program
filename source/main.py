@@ -1,7 +1,9 @@
-from database.db_models import *
+from database.db_init import db_init
 from database.db_queries import *
-from Client1C.http_client_1c import HTTPClient1C
-from geocoding.geocoding_interface import GeocodingInterface
+from client_1c.http_client_1c import HTTPClient1C
+from geocoding.geocoding_wrapper import GeocodingWrapper
+from routing.routing_wrapper import RoutingWrapper
+from vrp.vrp_wrapper import VRPWrapper
 from pathlib import Path
 
 
@@ -23,5 +25,11 @@ def first_data_load(url):
 if __name__ == '__main__':
     db_path = Path().resolve() / 'database.db'
     url_1c = ''
+
+    db_init(db_path)
     first_data_load(url_1c)
+
+    geocoder = GeocodingWrapper()
+    router = RoutingWrapper()
+    vrp_solver = VRPWrapper(url_1c)
 

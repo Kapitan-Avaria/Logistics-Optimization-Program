@@ -49,7 +49,7 @@ class YandexRoutingClient:
             for j, segment in enumerate(data[i]):
 
                 if segment["status"] != "OK":
-                    continue    # Заменить на сохранение ошибок в логи
+                    continue    # TODO Заменить на сохранение ошибок в логи
 
                 res[(i, j)] = {
                     "distance": int(segment["distance"]["value"]),
