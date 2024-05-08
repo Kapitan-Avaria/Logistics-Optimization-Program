@@ -4,7 +4,7 @@ import sys
 import os
 import pygame
 
-from source.database.db_init import Segment
+from source.database.db_models import Segment
 from source.database.db_queries import calc_direct_distances, get_many_coords_from_db_addresses, get_objects
 
 

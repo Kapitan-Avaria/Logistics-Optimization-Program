@@ -1,6 +1,6 @@
 import pandas as pd
 from db_queries import get_objects
-from db_init import SegmentStatistics
+from db_models import SegmentStatistics
 
 
 if __name__ == '__main__':

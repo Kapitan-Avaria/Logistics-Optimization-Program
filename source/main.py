@@ -1,4 +1,4 @@
-from database.db_init import *
+from database.db_models import *
 from database.db_queries import *
 from Client1C.http_client_1c import HTTPClient1C
 from geocoding.geocoding_interface import GeocodingInterface

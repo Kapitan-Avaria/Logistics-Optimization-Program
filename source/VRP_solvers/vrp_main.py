@@ -1,4 +1,4 @@
-from source.database.db_init import Order, OrderProduct, Product, Vehicle, Address, Segment, SegmentStatistics
+from source.database.db_models import Order, OrderProduct, Product, Vehicle, Address, Segment, SegmentStatistics
 from source.database.db_queries import get_objects
 from source.Client1C.http_client_1c import HTTPClient1C
 from math import cos, pi

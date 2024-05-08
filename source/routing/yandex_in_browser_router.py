@@ -32,7 +32,7 @@ class YandexInBrowserRouter:
             
 
 if __name__ == '__main__':
-    from source.database.db_init import Segment
+    from source.database.db_models import Segment
     from source.database.db_queries import get_objects
     from datetime import datetime, timedelta
     from yandex_in_browser_routing_tools import generate_urls_bulk
