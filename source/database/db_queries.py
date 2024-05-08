@@ -21,21 +21,16 @@ def insert_orders(orders: list[dict], session: Session):
     for order in orders:
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
 
-        existing_order.date = order["datetime"]
+        if existing_order.date is None:
+            existing_order.date = order["datetime"]
 
-        client: Client = select_existing_object(session, Client, name=order["client"])
-        existing_order.client_id = client.id
+        if existing_order.client_id is None:
+            client: Client = select_existing_object(session, Client, name=order["client"])
+            existing_order.client_id = client.id
 
-        address: Address = select_existing_object(session, Address, string_address=order["address"])
-        if address.comment is None and order["address_comment"]:
-            address.comment = order["address_comment"]
-        if address.latitude is None and address.longitude is None and order["geo_location"]:
-            address.latitude = Decimal(order["geo_location"]["latitude"])
-            address.longitude = Decimal(order["geo_location"]["longitude"])
-        if address.delivery_zone_id is None and order["delivery-zone"]:
-            delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
-            address.delivery_zone_id = delivery_zone.id
-        existing_order.address_id = address.id
+        if existing_order.address_id is None:
+            address = insert_address_from_order(order, session)
+            existing_order.address_id = address.id
 
         existing_order.delivery_time_start = order["delivery-time-start"]
         existing_order.delivery_time_end = order["delivery-time-end"]
@@ -58,6 +53,20 @@ def insert_orders(orders: list[dict], session: Session):
 def insert_addresses(addresses: list, session: Session):
     for address_string in addresses:
         select_existing_object(session, Address, string_address=address_string)
+
+
+@use_with_session
+def insert_address_from_order(order, session: Session):
+    address: Address = select_existing_object(session, Address, string_address=order["address"])
+    if address.comment is None and order["address_comment"]:
+        address.comment = order["address_comment"]
+    if address.latitude is None and address.longitude is None and order["geo_location"]:
+        address.latitude = Decimal(order["geo_location"]["latitude"])
+        address.longitude = Decimal(order["geo_location"]["longitude"])
+    if address.delivery_zone_id is None and order["delivery-zone"]:
+        delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
+        address.delivery_zone_id = delivery_zone.id
+    return address
 
 
 @use_with_session
@@ -110,18 +119,28 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
 def insert_vehicles(vehicles: list[dict], session: Session):
     for vehicle in vehicles:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle["name"])
-        existing_vehicle.category = vehicle["category"]
-        existing_vehicle.dimensions = {"inner": vehicle["dimensions"]}
-        existing_vehicle.weight_capacity = vehicle["weight-capacity"]
+
+        if existing_vehicle.category is None and vehicle["category"]:
+            existing_vehicle.category = vehicle["category"]
+
+        if existing_vehicle.dimensions is None and vehicle["dimensions"]:
+            existing_vehicle.dimensions = {"inner": vehicle["dimensions"]}
+
+        if existing_vehicle.weight_capacity is None and vehicle["weight-capacity"]:
+            existing_vehicle.weight_capacity = vehicle["weight-capacity"]
 
 
 @use_with_session
 def insert_products(products: list[dict], session: Session):
     for product in products:
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
-        form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form-factor"])
-        existing_product.form_factor = form_factor.id
-        existing_product.dimensions = product["dimensions"]
+
+        if existing_product.form_factor is None:
+            form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form-factor"])
+            existing_product.form_factor = form_factor.id
+
+        if existing_product.dimensions is None and product["dimensions"]:
+            existing_product.dimensions = product["dimensions"]
 
 
 @use_with_session
@@ -129,17 +148,18 @@ def insert_vehicle_geodata(data, session: Session):
     for vehicle_data in data:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle_data["vehicle"])
         for record in vehicle_data["geodata"]:
-            new_data = VehicleGeodata(
+            existing_geodata: VehicleGeodata = select_existing_object(
+                session,
+                VehicleGeodata,
                 vehicle_id=existing_vehicle.id,
                 datetime=record["datetime"],
                 latitude=Decimal(record["latitude"]),
                 longitude=Decimal(record["longitude"])
             )
-            session.add(new_data)
 
 
 @use_with_session
-def insert_segments(segments, session: Session):
+def insert_dummy_segments(segments, session: Session):
     for segment in segments:
         existing_segment: Segment = select_existing_object(
             session,
@@ -160,7 +180,7 @@ def insert_segment_statistics(segment_id, route_distance, route_duration, date, 
         date=date,
         start_time=start_time,
         week_day=week_day,
-        json_response=json_response     # Добавить в json поле source с вариантами "yandex", "ors", "real"
+        json_response=json_response     # TODO Добавлять в json поле source с вариантами "yandex", "ors", "real"
     )
 
 
