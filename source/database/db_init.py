@@ -2,8 +2,8 @@ from sqlalchemy import create_engine, Column, Integer, Float, String, DECIMAL, T
 from sqlalchemy.orm import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
-
-engine = create_engine("sqlite+pysqlite:///C:/Data and Projects/ООО Вершина/Logistics-Optimization-Program/database.db")
+path = "C:/Data and Projects/ООО Вершина/Logistics-Optimization-Program"
+engine = create_engine(f"sqlite+pysqlite:///{path}/database.db")
 
 if not database_exists(engine.url):
     create_database(engine.url)
