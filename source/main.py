@@ -32,7 +32,7 @@ def load_operational_data(client: HTTPClient1C):
 
 
 if __name__ == '__main__':
-    db_path = Path().resolve() / 'database.db'
+    db_path = Path('..').resolve() / 'database.db'
     url_1c = ''
 
     # Initialize main clients and wrappers
