@@ -189,7 +189,7 @@ class VRPWrapper:
                 break
 
             # Calculate total rough capacity
-            rough_capacity = self.calc_rough_vehicle_capacity(tire_dims, vehicle["dimensions"])
+            rough_capacity = self.calc_rough_vehicle_capacity(tire_dims, vehicle["dimensions"]["inner"])
 
             # Assign next vehicle
             assigned_vehicles_ids.append(vehicle["id"])

@@ -57,7 +57,7 @@ class Order(Base):
     number = Column(String)
     client_id = Column(Integer, ForeignKey("clients.id"))
     address_id = Column(Integer, ForeignKey("addresses.id"))
-    datetime = Column(DateTime)
+    date = Column(Date)
     delivery_time_start = Column(Time)
     delivery_time_end = Column(Time)
     status = Column(Integer)
@@ -87,7 +87,7 @@ class Vehicle(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     category = Column(String)
-    dimensions = Column(JSON)   # inner: depth, width, height; outer_dimensions: ...
+    dimensions = Column(JSON)   # inner: depth, width, height; outer: ...
     weight_capacity = Column(Integer)
 
 
