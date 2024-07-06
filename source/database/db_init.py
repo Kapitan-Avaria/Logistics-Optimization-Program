@@ -27,3 +27,7 @@ def db_init(db_path: Path):
     Base.metadata.create_all(engine)
 
     return is_empty
+
+
+if __name__ == "__main__":
+    db_init(Path('C:\Data and Projects\ООО Вершина\Logistics-Optimization-Program\database.db'))
