@@ -1,13 +1,13 @@
-from pathlib import Path
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
 
+from source.constants import DB_PATH
 
 Base = declarative_base()
 engine = None
+Session = None
 
 
 class Address(Base):
@@ -134,14 +134,16 @@ class FormFactor(Base):
     dimensions_template = Column(JSON)
 
 
-def db_init(db_path: Path):
+def db_init(db_path=DB_PATH):
     global engine
+    global Session
     is_empty = False
 
     if not db_path.parent.exists():
         raise Exception("You need to set db file name")
 
     engine = create_engine(f"sqlite+pysqlite:///{db_path}")
+    Session = sessionmaker(bind=engine)
 
     if not database_exists(engine.url):
         create_database(engine.url)
@@ -153,5 +155,4 @@ def db_init(db_path: Path):
     return is_empty
 
 
-if __name__ == "__main__":
-    db_init(Path('C:\Data and Projects\ООО Вершина\Logistics-Optimization-Program\database.db'))
+db_init()

@@ -1,7 +1,6 @@
-from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import NoResultFound
 
-from source.database.db_init import engine
+from source.database.db_init import Session
 import numpy as np
 
 
@@ -15,7 +14,7 @@ def use_with_session(func):
             return func(*args, **kwargs)
 
         # If the session is not provided, creates new one
-        with Session(bind=engine) as session:
+        with Session() as session:
             ret = func(*args, **kwargs, session=session)
             session.commit()
         return ret
