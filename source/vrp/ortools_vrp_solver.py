@@ -38,7 +38,7 @@ def create_data_model(demands: list, distances: dict, times, vehicles_capacities
     data["numlocations_"] = len(demands)
     data["distances"] = distances
     data["times"] = times
-    data["time_windows"] = [(0, 0)] + [(8 * 60, 18 * 60)] * (data["numlocations_"] - 1)
+    data["time_windows"] = [(0, 0)] + [(0, 18 * 60)] * (data["numlocations_"] - 1)
     data["demands"] = demands
     data["time_per_demand_unit"] = 5  # 5 minutes/unit
     data["num_vehicles"] = len(vehicles_capacities)

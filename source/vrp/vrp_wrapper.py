@@ -27,21 +27,22 @@ class VRPWrapper:
         """
         solutions = []
         for zone_id, (vehicle_ids, vehicle_capacities) in self.zones_to_vehicles.items():
-            zone_content = self.get_zone_content(zone_id)
-            zone_nodes = list(zone_content.keys())
-
-            zone_demands = self._get_zone_demands(zone_content)
-
-            distances, durations = self._calc_distances_durations(zone_nodes)
-
-            data = create_data_model(zone_demands, distances, durations, vehicle_capacities)
-            solution = solve(data)
-
+            solution = self._solve_vrp_for_zone(zone_id, vehicle_capacities)
             if solution is not None:
                 converted_solution = self._convert_solution_data(solution)
                 solutions.append(solution)
-
         return solutions
+
+    def _solve_vrp_for_zone(self, zone_id, vehicle_capacities):
+        zone_content = self.get_zone_content(zone_id)
+        zone_nodes = list(zone_content.keys())
+
+        zone_demands = self._get_zone_demands(zone_content)
+        distances, durations = self._calc_distances_durations(zone_nodes)
+
+        data = create_data_model(zone_demands, distances, durations, vehicle_capacities)
+        solution = solve(data)
+        return solution
 
     def _convert_solution_data(self, solution):
         # TODO
