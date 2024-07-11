@@ -1,6 +1,6 @@
 from yandex_geo_client import YandexGeoClient
 from source.constants import YANDEX_GEO_API_KEY
-from source.database.db_models import Address
+from source.database.db_init import Address
 from source.database.db_queries import insert_coords, get_objects
 from time import sleep
 

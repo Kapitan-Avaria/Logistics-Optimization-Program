@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from source.database.db_models import Segment, Address
+from source.database.db_init import Segment, Address
 from source.database.db_queries import get_objects, insert_segment_statistics
 
 
