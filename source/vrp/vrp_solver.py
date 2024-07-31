@@ -3,16 +3,20 @@ import random
 
 
 class CVRPTW:
-    def __init__(self, locations, demands, product_volumes, time_windows, vehicle_capacities):
+    def __init__(self, locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator=None):
         self.locations = locations
         self.demands = demands
         self.product_volumes = product_volumes
         self.time_windows = time_windows
         self.vehicle_capacities = vehicle_capacities
         self.vehicle_count = len(vehicle_capacities)
+        self.calc_base_distance = self.default_distance_evaluator if distance_evaluator is None else distance_evaluator
+
+    def default_distance_evaluator(self, from_node, to_node):
+        return np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node]))
 
     def time_dependent_travel_time(self, from_node, to_node, current_time):
-        base_distance = np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node]))
+        base_distance = self.calc_base_distance(from_node, to_node)
 
         # Define traffic conditions: morning (0-6), day (6-18), night (18-24)
         if 0 <= current_time < 6:

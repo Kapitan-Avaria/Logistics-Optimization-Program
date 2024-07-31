@@ -127,6 +127,8 @@ def insert_vehicles(vehicles: list[dict], session: Session):
             existing_vehicle.category = vehicle["category"]
 
         if existing_vehicle.dimensions is None and vehicle["dimensions"]:
+            # TODO: Добавить расчет volume
+            # vehicle["dimensions"]["volume"] = calc_vehicle_volume()
             existing_vehicle.dimensions = {"inner": vehicle["dimensions"]}
 
         if existing_vehicle.weight_capacity is None and vehicle["weight-capacity"]:
@@ -144,6 +146,8 @@ def insert_products(products: list[dict], session: Session):
 
         if existing_product.dimensions is None and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
+
+        # TODO: calc volume from dimensions
 
 
 @use_with_session

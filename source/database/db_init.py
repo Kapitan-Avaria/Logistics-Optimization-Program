@@ -97,7 +97,7 @@ class Vehicle(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
     category = Column(String)
-    dimensions = Column(JSON)   # inner: depth, width, height; outer: ...
+    dimensions = Column(JSON)   # inner: depth, width, height, volume; outer: ...
     weight_capacity = Column(Integer)
 
 
@@ -118,6 +118,7 @@ class Product(Base):
     name = Column(String, unique=True)
     form_factor = Column(Integer, ForeignKey("form_factors.id"))
     dimensions = Column(JSON)   # spatial dimensions in the format corresponding to the form_factor
+    volume = Column(Float)
 
 
 class OrderProduct(Base):

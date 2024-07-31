@@ -15,7 +15,7 @@ if __name__ == '__main__':
     client1c = HTTPClient1C(url_1c)
     geocoder = GeocodingWrapper()
     router = RoutingWrapper()
-    vrp_solver = VRPWrapper()
+    vrp = VRPWrapper()
     db_is_empty = db_init(db_path)
 
 
