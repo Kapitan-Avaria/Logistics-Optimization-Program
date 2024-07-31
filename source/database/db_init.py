@@ -56,6 +56,8 @@ class DeliveryZone(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, unique=True)
+    type = Column(Integer)  # Type of the zone. 0 for in-city, 1 for regional
+    depot_id = Column(Integer, ForeignKey("addresses.id"))
 
 
 class Order(Base):
