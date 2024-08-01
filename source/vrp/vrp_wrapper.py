@@ -10,19 +10,15 @@ class VRPWrapper:
         self.products = dict()
         self.vehicles = []
         self.depot_address = dict()
-        self.assigned_vehicles = []
-        self.assigned_orders = []
+        self.unassigned_vehicles = []
+        self.unassigned_orders = []
         self.approved_routes = []
         self.actual_volume_ratio = 0.8  # A coefficient to diminish volume of the vehicle
 
-    def prepare_data(self):
+    def build_routes(self):
         num_orders = len(self.orders)
 
         addresses = [self.depot_address] + [self.orders[o]["address"] for o in range(num_orders)]
-        try:
-            distance_evaluator = self.create_distance_evaluator([a["id"] for a in addresses])
-        except NoSegmentDataError:
-            distance_evaluator = None
 
         locations = [(a["longitude"], a["latitude"]) for a in addresses]
 
@@ -33,9 +29,17 @@ class VRPWrapper:
         time_windows = [(0, 24)] + [self.orders[o] for o in range(num_orders)]
         vehicle_capacities = [v["dimensions"]["inner"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
+        # TODO: Где-то тут надо впихнуть выбор индексов машин и заказов, которые мы обслуживаем в текущем проходе
+
+        try:
+            distance_evaluator = self.create_distance_evaluator([a["id"] for a in addresses])
+        except NoSegmentDataError:
+            distance_evaluator = None
+
         cvrptw = CVRPTW(locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator)
         routes = cvrptw.construct_routes()
         cvrptw.print_routes(routes)
+        return routes
 
     def load_data(self, db_is_empty, url_1c):
         """
@@ -91,6 +95,9 @@ class VRPWrapper:
 
         random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])
         self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
+
+        self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
+        self.unassigned_orders = [i for i in range(len(self.orders))]
 
     @staticmethod
     def create_distance_evaluator(addresses_ids):
