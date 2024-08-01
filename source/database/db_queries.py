@@ -17,7 +17,7 @@ def get_objects(session: Session, **kwargs):
 
 
 @use_with_session
-def insert_orders(orders: list[dict], session: Session):
+def upsert_orders(orders: list[dict], session: Session):
     for order in orders:
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
 
@@ -119,7 +119,7 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
 
 
 @use_with_session
-def insert_vehicles(vehicles: list[dict], session: Session):
+def upsert_vehicles(vehicles: list[dict], session: Session):
     for vehicle in vehicles:
         existing_vehicle: Vehicle = select_existing_object(session, Vehicle, name=vehicle["name"])
 
@@ -136,7 +136,7 @@ def insert_vehicles(vehicles: list[dict], session: Session):
 
 
 @use_with_session
-def insert_products(products: list[dict], session: Session):
+def upsert_products(products: list[dict], session: Session):
     for product in products:
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
 
