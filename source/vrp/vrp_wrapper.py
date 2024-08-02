@@ -10,33 +10,38 @@ class VRPWrapper:
         self.products = dict()
         self.vehicles = []
         self.depot_address = dict()
+
         self.unassigned_vehicles = []
         self.unassigned_orders = []
         self.approved_routes = []
         self.actual_volume_ratio = 0.8  # A coefficient to diminish volume of the vehicle
 
-    def build_routes(self):
-        num_orders = len(self.orders)
+        # VRP data
+        self.num_orders = 0
+        self.addresses = []
+        self.locations = []
+        self.demands = []
+        self.product_volumes = dict()
+        self.time_windows = []
+        self.vehicle_capacities = []
 
-        addresses = [self.depot_address] + [self.orders[o]["address"] for o in range(num_orders)]
-
-        locations = [(a["longitude"], a["latitude"]) for a in addresses]
-
-        demands = [{}] + [
-            {p["product_id"]: p["quantity"] for p in self.orders[o]["products"]} for o in range(num_orders)
-        ]
-        product_volumes = {p["product_id"]: p["volume"] for p in self.products}
-        time_windows = [(0, 24)] + [self.orders[o] for o in range(num_orders)]
-        vehicle_capacities = [v["dimensions"]["inner"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
-
-        # TODO: Где-то тут надо впихнуть выбор индексов машин и заказов, которые мы обслуживаем в текущем проходе
-
+    def build_routes(self, vehicles_indices, addresses_indices):
+        """
+        Solves CVRPTW problem for the selected vehicles and addresses
+        """
         try:
-            distance_evaluator = self.create_distance_evaluator([a["id"] for a in addresses])
+            distance_evaluator = self.create_distance_evaluator([self.addresses[i]["id"] for i in addresses_indices])
         except NoSegmentDataError:
             distance_evaluator = None
 
-        cvrptw = CVRPTW(locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator)
+        cvrptw = CVRPTW(
+            [self.locations[a] for a in addresses_indices],
+            [self.demands[a] for a in addresses_indices],
+            self.product_volumes,
+            [self.time_windows[a] for a in addresses_indices],
+            [self.vehicle_capacities[v] for v in vehicles_indices],
+            distance_evaluator
+        )
         routes = cvrptw.construct_routes()
         cvrptw.print_routes(routes)
         return routes
@@ -87,7 +92,7 @@ class VRPWrapper:
                 p_obj = get_objects(class_name=Product, id=p["product_id"])[0]
                 self.products[p["product_id"]] = p_obj
 
-        # Load available vehicles
+        # Load available vehicles from db
         self.vehicles = []
         for av_vehicle in available_vehicles():
             vehicle = get_objects(class_name=Vehicle, name=av_vehicle["name"])[0]
@@ -98,6 +103,21 @@ class VRPWrapper:
 
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
+
+        # ***************************
+        # Prepare VRP data
+        self.num_orders = len(self.orders)
+
+        self.addresses = [self.depot_address] + [self.orders[o]["address"] for o in range(self.num_orders)]
+
+        self.locations = [(a["longitude"], a["latitude"]) for a in self.addresses]
+
+        self.demands = [{}] + [
+            {p["product_id"]: p["quantity"] for p in self.orders[o]["products"]} for o in range(self.num_orders)
+        ]
+        self.product_volumes = {p["product_id"]: p["volume"] for p in self.products}
+        self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
+        self.vehicle_capacities = [v["dimensions"]["inner"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
     @staticmethod
     def create_distance_evaluator(addresses_ids):
