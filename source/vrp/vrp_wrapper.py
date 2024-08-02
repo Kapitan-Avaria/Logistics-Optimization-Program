@@ -1,6 +1,10 @@
 from source.vrp.vrp_solver import CVRPTW
 from source.client_1c.http_client_1c import HTTPClient1C
+from source.routing.routing_wrapper import RoutingWrapper
 from source.database.db_queries import *
+
+from datetime import datetime
+from copy import deepcopy
 
 
 class VRPWrapper:
@@ -18,19 +22,21 @@ class VRPWrapper:
 
         # VRP data
         self.num_orders = 0
-        self.addresses = []
+        self.addresses: list[dict] = []
         self.locations = []
         self.demands = []
         self.product_volumes = dict()
         self.time_windows = []
         self.vehicle_capacities = []
 
+        self.router = RoutingWrapper()
+
     def build_routes(self, vehicles_indices, addresses_indices):
         """
         Solves CVRPTW problem for the selected vehicles and addresses
         """
         try:
-            distance_evaluator = self.create_distance_evaluator([self.addresses[i]["id"] for i in addresses_indices])
+            distance_evaluator = self.create_distance_evaluator([self.addresses[i] for i in addresses_indices])
         except NoSegmentDataError:
             distance_evaluator = None
 
@@ -119,43 +125,70 @@ class VRPWrapper:
         self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
         self.vehicle_capacities = [v["dimensions"]["inner"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
-    @staticmethod
-    def create_distance_evaluator(addresses_ids):
+    def create_distance_evaluator(self, addresses):
         """
         Calculates 'matrices' of distances and durations between all nodes in the zone.
-        :param addresses_ids: list of ids of addresses
+        :param addresses: list of addresses
         :return: evaluator function
         """
         distances = []
+        segments = []
+        lack_of_data = False
 
-        # Double loop through all nodes
-        for i, from_node in enumerate(addresses_ids):
+        # Load all segments from the db
+        for i, from_node in enumerate(addresses):
+            segments.append([])
+            for j, to_node in enumerate(addresses):
+                if i == j:
+                    segments[i].append(None)
+                    continue
+                segment = get_objects(
+                    class_name=Segment, address_1_id=from_node["id"], address_2_id=to_node["id"]
+                )[0]
+                segments[i].append(segment)
+                segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
+                num_records = len(segment_statistics)
+                if num_records == 0:
+                    lack_of_data = True
+
+        # If there is no data for some of the segments, request distances from routing API
+        if lack_of_data:
+            locations = [[a["longitude"], a["latitude"]] for a in addresses]
+            ors = self.router.clients["ors-api"]
+            dist, dur = ors.get_distances(locations)
+            dt = datetime.now()
+
+        for i, from_node in enumerate(addresses):
             distances.append([])
-            for j, to_node in enumerate(addresses_ids):
-
-                # Distance between the same node is 0
-                if from_node == to_node:
+            for j, to_node in enumerate(addresses):
+                if i == j:
                     distances[i].append(0)
+                    continue
 
-                # Distance and duration between nodes in different zones is calculated using the average of known data
-                else:
-                    # Get segment statistics for the segment between the two nodes
-                    segment = get_objects(class_name=Segment, address_1_id=from_node, address_2_id=to_node)[0]
-                    segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
+                segment = segments[i][j]
 
-                    # Calculate average distance and duration between the two nodes
-                    num_records = len(segment_statistics)
+                if lack_of_data:
+                    insert_segment_statistics(
+                        segment["id"],
+                        dist[i][j],
+                        dur[i][j],
+                        dt.date(),
+                        dt.time(),
+                        dt.weekday(),
+                        {'source': 'ors'}
+                    )
 
-                    if num_records == 0:
-                        raise NoSegmentDataError(f'There is no data records for segment {segment["id"]} with nodes ({from_node} -> {to_node})')
+                # Calculate average distance and duration between the two nodes
+                segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
+                num_records = len(segment_statistics)
 
-                    sum_dist = 0
-                    sum_time = 0
-                    for record in range(num_records):
-                        sum_dist += segment_statistics[record]["distance"]
-                        sum_time += segment_statistics[record]["duration"]
-                    avg_dist = sum_dist / num_records
-                    distances[i].append(avg_dist)
+                sum_dist = 0
+                sum_time = 0
+                for record in range(num_records):
+                    sum_dist += segment_statistics[record]["distance"]
+                    sum_time += segment_statistics[record]["duration"]
+                avg_dist = sum_dist / num_records
+                distances[i].append(avg_dist)
 
         def distance_evaluator(from_node, to_node):
             nonlocal distances
