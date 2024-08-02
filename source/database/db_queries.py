@@ -68,6 +68,9 @@ def insert_address_from_order(order, session: Session):
         address.longitude = Decimal(order["geo_location"]["longitude"])
     if address.delivery_zone_id is None and order["delivery-zone"]:
         delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
+        delivery_zone.depot_id = address.id
+        if order["type"]:
+            delivery_zone.type = order["type"]
         address.delivery_zone_id = delivery_zone.id
     return address
 
@@ -127,8 +130,7 @@ def upsert_vehicles(vehicles: list[dict], session: Session):
             existing_vehicle.category = vehicle["category"]
 
         if existing_vehicle.dimensions is None and vehicle["dimensions"]:
-            # TODO: Добавить расчет volume
-            # vehicle["dimensions"]["volume"] = calc_vehicle_volume()
+            vehicle["dimensions"]["volume"] = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
             existing_vehicle.dimensions = {"inner": vehicle["dimensions"]}
 
         if existing_vehicle.weight_capacity is None and vehicle["weight-capacity"]:
@@ -137,17 +139,29 @@ def upsert_vehicles(vehicles: list[dict], session: Session):
 
 @use_with_session
 def upsert_products(products: list[dict], session: Session):
+    def tire_dims_to_external_mm(tire_dims: list):
+        """converts standard tire dimensions to dimensions of the box bounding the tire"""
+        width = tire_dims[0]
+        height = tire_dims[1]
+        diameter = tire_dims[2]
+
+        diameter_m = (diameter * 25.4 + width * (height / 100)) / 1000
+        width_m = width / 1000
+
+        return [diameter_m, diameter_m, width_m]
+
     for product in products:
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
 
         if existing_product.form_factor is None:
             form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form-factor"])
             existing_product.form_factor = form_factor.id
-
         if existing_product.dimensions is None and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
-
-        # TODO: calc volume from dimensions
+        if product["form-factor"] == 'Шина':
+            dims = tire_dims_to_external_mm(product["dimensions"])
+            volume = dims[0] * dims[1] * dims[2]
+            existing_product.volume = volume
 
 
 @use_with_session
