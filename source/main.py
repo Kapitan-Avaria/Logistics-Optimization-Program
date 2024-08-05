@@ -25,11 +25,11 @@ if __name__ == '__main__':
 
     # Initialize main clients and wrappers
     # client1c = HTTPClient1C(url_1c)
-    # geocoder = GeocodingWrapper()
-    # router = RoutingWrapper()
+    # gw = GeocodingWrapper()
+    # rw = RoutingWrapper()
     db_is_empty = db_init(db_path)
 
-    vrp_wrapper = VRPWrapper()
+    vw = VRPWrapper()
 
 
 

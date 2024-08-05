@@ -76,6 +76,23 @@ class VRPWrapper:
         available_orders = client.get_available_orders()
         upsert_orders(available_orders)
 
+        def reload_address_if_not_geocoded(address):
+            """
+            If there is no geolocation for the address, then request it from API and reload address
+            """
+            if address["longitude"] is None or address["latitude"] is None:
+                gw = GeocodingWrapper()
+                coords = gw.get_coordinates(address["string_address"])
+                insert_coords(address["string_address"], coords)
+                address = get_objects(class_name=Address, id=address["id"])
+            return address
+
+        if self.request_coords_on_load:
+            # Bulk geocoding the addresses that have no geolocation
+            for o, order in enumerate(available_orders):
+                address = get_objects(class_name=Address, string_address=order["address"])
+                reload_address_if_not_geocoded(address)
+
         # Load available vehicles from 1C
         available_vehicles = client.get_available_vehicles()
         for v in available_vehicles:
@@ -92,13 +109,8 @@ class VRPWrapper:
             # Load products and address in each order
             order_products = get_objects(class_name=OrderProduct, order_id=order["id"])
             address = get_objects(class_name=Address, id=order["address_id"])
-
-            # If there is no geolocation for the address, then request it from API and reload address
-            if (address["longitude"] is None or address["latitude"] is None) and self.request_coords_on_load:
-                gw = GeocodingWrapper()
-                coords = gw.get_coordinates(address["string_address"])
-                insert_coords(address["string_address"], coords)
-                address = get_objects(class_name=Address, id=order["address_id"])
+            if self.request_coords_on_load:
+                address = reload_address_if_not_geocoded(address)
 
             self.orders[o]["products"] = order_products
             self.orders[o]["address"] = address
