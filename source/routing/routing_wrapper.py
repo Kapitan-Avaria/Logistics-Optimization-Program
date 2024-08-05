@@ -15,3 +15,6 @@ class RoutingWrapper:
             'yandex-selenium': YandexInBrowserRouter(),
             'yandex-manual': YandexManualRoutingHelper()
         }
+
+    def get_distances(self, sources, destinations=None):
+        res = self.clients['ors-api'].get_distances(sources, destinations)

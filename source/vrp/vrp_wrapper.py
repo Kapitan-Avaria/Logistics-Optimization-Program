@@ -31,8 +31,6 @@ class VRPWrapper:
         self.time_windows = []
         self.vehicle_capacities = []
 
-        self.router = RoutingWrapper()
-
     def build_routes(self, vehicles_indices, addresses_indices):
         """
         Solves CVRPTW problem for the selected vehicles and addresses
@@ -176,8 +174,8 @@ class VRPWrapper:
         # If there is no data for some of the segments, request distances from routing API
         if lack_of_data:
             locations = [[a["longitude"], a["latitude"]] for a in addresses]
-            ors = self.router.clients["ors-api"]
-            dist, dur = ors.get_distances(locations)
+            rw = RoutingWrapper()
+            dist, dur = rw.get_distances(locations)
             dt = datetime.now()
 
         for i, from_node in enumerate(addresses):
