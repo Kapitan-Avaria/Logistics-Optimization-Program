@@ -63,9 +63,10 @@ def insert_address_from_order(order, session: Session):
     address: Address = select_existing_object(session, Address, string_address=order["address"])
     if address.comment is None and order["address_comment"]:
         address.comment = order["address_comment"]
-    if address.latitude is None and address.longitude is None and order["geo_location"]:
-        address.latitude = Decimal(order["geo_location"]["latitude"])
-        address.longitude = Decimal(order["geo_location"]["longitude"])
+    if (address.latitude is None or address.longitude) is None:
+        if order["geo_location"]:
+            address.longitude = Decimal(order["geo_location"]["longitude"])
+            address.latitude = Decimal(order["geo_location"]["latitude"])
     if address.delivery_zone_id is None and order["delivery-zone"]:
         delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
         delivery_zone.depot_id = address.id

@@ -1,6 +1,7 @@
 from source.vrp.vrp_solver import CVRPTW
 from source.client_1c.http_client_1c import HTTPClient1C
 from source.routing.routing_wrapper import RoutingWrapper
+from source.geocoding.geocoding_wrapper import GeocodingWrapper
 from source.database.db_queries import *
 
 from datetime import datetime
@@ -19,6 +20,7 @@ class VRPWrapper:
         self.unassigned_orders = []
         self.approved_routes = []
         self.actual_volume_ratio = 0.8  # A coefficient to diminish volume of the vehicle
+        self.request_coords_on_load = True
 
         # VRP data
         self.num_orders = 0
@@ -90,6 +92,14 @@ class VRPWrapper:
             # Load products and address in each order
             order_products = get_objects(class_name=OrderProduct, order_id=order["id"])
             address = get_objects(class_name=Address, id=order["address_id"])
+
+            # If there is no geolocation for the address, then request it from API and reload address
+            if (address["longitude"] is None or address["latitude"] is None) and self.request_coords_on_load:
+                gw = GeocodingWrapper()
+                coords = gw.get_coordinates(address["string_address"])
+                insert_coords(address["string_address"], coords)
+                address = get_objects(class_name=Address, id=order["address_id"])
+
             self.orders[o]["products"] = order_products
             self.orders[o]["address"] = address
 
