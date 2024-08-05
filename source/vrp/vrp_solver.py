@@ -16,17 +16,27 @@ class CVRPTW:
         return np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node]))
 
     def time_dependent_travel_time(self, from_node, to_node, current_time):
-        base_distance = self.calc_base_distance(from_node, to_node)
+        base_distance = self.calc_base_distance(from_node, to_node) / 1000  # Converting to kilometers
+        base_velocity = 30  # km/h
+        min_velocity = 11
 
-        # Define traffic conditions: morning (0-6), day (6-18), night (18-24)
+        # Define traffic conditions
         if 0 <= current_time < 6:
-            traffic_multiplier = 1.5
-        elif 6 <= current_time < 18:
-            traffic_multiplier = 1.0
+            velocity = base_velocity
+        elif 6 <= current_time < 8:
+            velocity = base_velocity * (min_velocity - base_velocity) / 2 + 87
+        elif 8 <= current_time < 17:
+            velocity = min_velocity
+        elif 17 <= current_time < 23:
+            velocity = base_velocity * (base_velocity - min_velocity) / 6 - 42.84
         else:
-            traffic_multiplier = 1.2
+            velocity = base_velocity
 
-        return base_distance / 30 * traffic_multiplier
+        return base_distance / velocity
+
+    def travel_cost(self, from_node, to_node, current_time):
+        cost = self.time_dependent_travel_time(from_node, to_node, current_time)
+        return cost
 
     def initial_solution(self):
         routes = []
@@ -87,10 +97,11 @@ class CVRPTW:
                         self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
                        self.vehicle_capacities[v]
                 ]
-                # Sort feasible locations by travel time from current point
+                # Sort feasible locations by travel cost from current point
                 feasible_locations.sort(
-                    key=lambda loc: self.time_dependent_travel_time(routes[v][-1][0], loc, vehicle_times[v]) if routes[
-                        v] else self.time_dependent_travel_time(0, loc, vehicle_times[v]))
+                    key=lambda loc: self.travel_cost(routes[v][-1][0], loc, vehicle_times[v]) if routes[v]
+                    else self.travel_cost(0, loc, vehicle_times[v])
+                )
 
                 # Try to add the closest feasible location to the vehicle route
                 for loc in feasible_locations:
