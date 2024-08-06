@@ -139,7 +139,7 @@ if __name__ == "__main__":
     random.seed(42)
     num_locations = 50
     num_vehicles = 10
-    locations = [(random.randint(0, 50), random.randint(0, 50)) for _ in range(num_locations)]
+    locations = [(25, 25)] + [(random.randint(0, 50), random.randint(0, 50)) for _ in range(1, num_locations)]
     demands = [{'A': random.randint(1, 5), 'B': random.randint(1, 5)} for _ in range(num_locations)]
     demands[0] = {}  # Depot has no demand
     product_volumes = {'A': 0.07, 'B': 0.1}
@@ -149,3 +149,37 @@ if __name__ == "__main__":
     cvrptw = CVRPTW(locations, demands, product_volumes, time_windows, vehicle_capacities)
     routes = cvrptw.construct_routes()
     cvrptw.print_routes(routes)
+
+    draw = True
+    if not draw:
+        exit()
+
+    import folium
+
+    colors = [
+        'red',
+        'blue',
+        'gray',
+        'darkred',
+        'lightred',
+        'orange',
+        'beige',
+        'green',
+        'darkgreen',
+        'lightgreen',
+        'darkblue',
+        'lightblue',
+        'purple',
+        'darkpurple',
+        'pink',
+        'cadetblue',
+        'lightgray',
+        'black'
+    ]
+    m = folium.Map(location=locations[0], tiles='cartodbpositron', zoom_start=13)
+    for r, route in enumerate(routes):
+        route_locations = [locations[0]] + [locations[loc] for loc, _, _, _ in route] + [locations[0]]
+        folium.PolyLine(route_locations, color=colors[r % len(colors)], weight=2.5, opacity=1).add_to(m)
+        for i, loc in enumerate(route_locations):
+            folium.Marker(loc, tooltip=f"Location {i}", icon=folium.Icon(color=colors[r % len(colors)])).add_to(m)
+    m.show_in_browser()
