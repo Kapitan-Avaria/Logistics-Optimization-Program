@@ -60,7 +60,7 @@ def upsert_orders(orders: list[dict], session: Session):
 
 
 def insert_address_from_dict(d: dict, session: Session):
-    address = select_existing_object(session, Address, string_address=d["string_address"])
+    address = select_existing_object(session, Address, string_address=d["address"])
     if address.latitude is None or address.longitude is None:
         if d["geo-location"]:
             address.longitude = Decimal(d["geo-location"]["longitude"])
