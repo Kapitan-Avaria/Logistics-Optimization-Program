@@ -19,7 +19,6 @@ class Address(Base):
     string_address = Column(String, unique=True)
     machine_address = Column(String, unique=True)
     delivery_zone_id = Column(Integer, ForeignKey("delivery_zones.id"))
-    comment = Column(Text)
 
     __table_args__ = (UniqueConstraint('latitude', 'longitude', name='_address_coords_uc'),)
 
@@ -70,6 +69,7 @@ class Order(Base):
     date = Column(Date)
     delivery_time_start = Column(Time)
     delivery_time_end = Column(Time)
+    comment = Column(Text)
     status = Column(Integer)
 
 

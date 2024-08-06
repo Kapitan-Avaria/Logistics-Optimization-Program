@@ -37,6 +37,9 @@ def upsert_orders(orders: list[dict], session: Session):
         if existing_order.delivery_time_end is None and order["delivery-time-end"]:
             existing_order.delivery_time_end = order["delivery-time-end"]
 
+        if existing_order.comment is None and order["comment"]:
+            existing_order.comment = order["comment"]
+
         if existing_order.status is None and order["status"]:
             existing_order.status = order["status"]
 
@@ -61,8 +64,6 @@ def insert_addresses(addresses: list, session: Session):
 @use_with_session
 def insert_address_from_order(order, session: Session):
     address: Address = select_existing_object(session, Address, string_address=order["address"])
-    if address.comment is None and order["address_comment"]:
-        address.comment = order["address_comment"]
     if (address.latitude is None or address.longitude) is None:
         if order["geo_location"]:
             address.longitude = Decimal(order["geo_location"]["longitude"])
