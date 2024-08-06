@@ -59,25 +59,27 @@ def upsert_orders(orders: list[dict], session: Session):
                 product_in_order.quantity = prd["quantity"]
 
 
+def insert_address_from_dict(d: dict, session: Session):
+    address = select_existing_object(session, Address, string_address=d["string_address"])
+    if address.latitude is None or address.longitude is None:
+        if d["geo-location"]:
+            address.longitude = Decimal(d["geo-location"]["longitude"])
+            address.latitude = Decimal(d["geo-location"]["latitude"])
+    if address.delivery_zone_id is None and d["delivery-zone"]:
+        delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=d["delivery-zone"])
+        address.delivery_zone_id = delivery_zone.id
+    return address
+
+
 @use_with_session
 def insert_addresses(addresses: list, session: Session):
-    for address_string in addresses:
-        select_existing_object(session, Address, string_address=address_string)
+    for a in addresses:
+        insert_address_from_dict(a, session)
 
 
 @use_with_session
 def insert_address_from_order(order, session: Session):
-    address: Address = select_existing_object(session, Address, string_address=order["address"])
-    if (address.latitude is None or address.longitude is None):
-        if order["geo-location"]:
-            address.longitude = Decimal(order["geo-location"]["longitude"])
-            address.latitude = Decimal(order["geo-location"]["latitude"])
-    if address.delivery_zone_id is None and order["delivery-zone"]:
-        delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
-        delivery_zone.depot_id = address.id
-        if order["type"]:
-            delivery_zone.type = order["type"]
-        address.delivery_zone_id = delivery_zone.id
+    address = insert_address_from_dict(order, session)
     return address
 
 
