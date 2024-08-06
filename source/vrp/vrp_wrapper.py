@@ -143,7 +143,7 @@ class VRPWrapper:
         ]
         self.product_volumes = {p["product_id"]: p["volume"] for p in self.products}
         self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
-        self.vehicle_capacities = [v["dimensions"]["inner"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
+        self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
     def create_distance_evaluator(self, addresses):
         """

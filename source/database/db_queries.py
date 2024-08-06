@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from decimal import Decimal
 import numpy as np
+from datetime import datetime
 
 from source.database.__all_models import *
 from source.database.db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
@@ -22,7 +23,8 @@ def upsert_orders(orders: list[dict], session: Session):
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
 
         if existing_order.date is None:
-            existing_order.date = order["datetime"]
+            date = datetime.strptime(order["date"], "%Y-%m-%d")
+            existing_order.date = date
 
         if existing_order.client_id is None:
             client: Client = select_existing_object(session, Client, name=order["client"])
@@ -33,9 +35,11 @@ def upsert_orders(orders: list[dict], session: Session):
             existing_order.address_id = address.id
 
         if existing_order.delivery_time_start is None and order["delivery-time-start"]:
-            existing_order.delivery_time_start = order["delivery-time-start"]
+            start_time = datetime.strptime(order["delivery-time-start"], "%H:%M").time()
+            existing_order.delivery_time_start = start_time
         if existing_order.delivery_time_end is None and order["delivery-time-end"]:
-            existing_order.delivery_time_end = order["delivery-time-end"]
+            end_time = datetime.strptime(order["delivery-time-end"], "%H:%M").time()
+            existing_order.delivery_time_end = end_time
 
         if existing_order.comment is None and order["comment"]:
             existing_order.comment = order["comment"]
@@ -64,10 +68,10 @@ def insert_addresses(addresses: list, session: Session):
 @use_with_session
 def insert_address_from_order(order, session: Session):
     address: Address = select_existing_object(session, Address, string_address=order["address"])
-    if (address.latitude is None or address.longitude) is None:
-        if order["geo_location"]:
-            address.longitude = Decimal(order["geo_location"]["longitude"])
-            address.latitude = Decimal(order["geo_location"]["latitude"])
+    if (address.latitude is None or address.longitude is None):
+        if order["geo-location"]:
+            address.longitude = Decimal(order["geo-location"]["longitude"])
+            address.latitude = Decimal(order["geo-location"]["latitude"])
     if address.delivery_zone_id is None and order["delivery-zone"]:
         delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=order["delivery-zone"])
         delivery_zone.depot_id = address.id
@@ -100,15 +104,12 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
             if address.id == addresses[i].id:
                 continue
 
-            segment_exists = bool(
-                session.query(Segment).filter_by(
-                    address_1_id=address.id,
-                    address_2_id=addresses[i].id
-                ).all()
-            )
+            segment = session.query(Segment).filter_by(address_1_id=address.id, address_2_id=addresses[i].id).all()
+            segment_exists = bool(segment)
 
             if segment_exists:
-                continue
+                if segment[0]["direct_distance"] is not None:
+                    continue
 
             select_existing_object(
                 session,
@@ -132,8 +133,8 @@ def upsert_vehicles(vehicles: list[dict], session: Session):
             existing_vehicle.category = vehicle["category"]
 
         if existing_vehicle.dimensions is None and vehicle["dimensions"]:
-            vehicle["dimensions"]["volume"] = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
-            existing_vehicle.dimensions = {"inner": vehicle["dimensions"]}
+            volume = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
+            existing_vehicle.dimensions = {"inner": vehicle["dimensions"], "volume": volume}
 
         if existing_vehicle.weight_capacity is None and vehicle["weight-capacity"]:
             existing_vehicle.weight_capacity = vehicle["weight-capacity"]
@@ -147,7 +148,7 @@ def upsert_products(products: list[dict], session: Session):
         height = tire_dims[1]
         diameter = tire_dims[2]
 
-        diameter_m = (diameter * 25.4 + width * (height / 100)) / 1000
+        diameter_m = (diameter * 25.4 + 2 * width * (height / 100)) / 1000
         width_m = width / 1000
 
         return [diameter_m, diameter_m, width_m]
@@ -160,7 +161,7 @@ def upsert_products(products: list[dict], session: Session):
             existing_product.form_factor = form_factor.id
         if existing_product.dimensions is None and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
-        if product["form-factor"] == 'Шина':
+        if product["form-factor"] == 'tire':
             dims = tire_dims_to_external_mm(product["dimensions"])
             volume = dims[0] * dims[1] * dims[2]
             existing_product.volume = volume
@@ -179,17 +180,6 @@ def insert_vehicle_geodata(data, session: Session):
                 latitude=Decimal(record["latitude"]),
                 longitude=Decimal(record["longitude"])
             )
-
-
-@use_with_session
-def insert_dummy_segments(segments, session: Session):
-    for segment in segments:
-        existing_segment: Segment = select_existing_object(
-            session,
-            Segment,
-            address_1_id=segment[0],
-            address_2_id=segment[1]
-        )
 
 
 @use_with_session
