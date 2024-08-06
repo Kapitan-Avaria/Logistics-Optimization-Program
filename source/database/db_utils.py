@@ -1,4 +1,5 @@
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import Session as SessionClass
 
 from source.database.db_init import Session
 import numpy as np
@@ -10,7 +11,7 @@ def use_with_session(func):
 
     def wrapper(*args, **kwargs):
         # If existing session provided, continues with default function behaviour
-        if "session" in kwargs.keys() or (True in map(lambda x: isinstance(x, Session), args) if len(args) > 0 else False):
+        if "session" in kwargs.keys() or (True in map(lambda x: isinstance(x, SessionClass), args) if len(args) > 0 else False):
             return func(*args, **kwargs)
 
         # If the session is not provided, creates new one
