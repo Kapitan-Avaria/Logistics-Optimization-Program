@@ -1,5 +1,6 @@
 import numpy as np
 import random
+from copy import deepcopy
 
 
 class CVRPTW:
@@ -32,7 +33,14 @@ class CVRPTW:
         else:
             velocity = base_velocity
 
-        return base_distance / velocity
+        travel_time = base_distance / velocity
+
+        loc_quantity = sum(self.demands[to_node].values())
+
+        static_time = 5 / 60  # 5 minutes
+        dynamic_time = loc_quantity * 30 / 3600  # 30 seconds per product
+
+        return travel_time + static_time + dynamic_time
 
     def deviation_penalty(self, from_node, to_node):
         # Penal the vehicle if it's angular jumping to far away from the current location
@@ -97,8 +105,9 @@ class CVRPTW:
 
     def travel_cost(self, from_node, to_node, current_time):
         travel_time = self.time_dependent_travel_time(from_node, to_node, current_time)
+        wait_time = max(self.time_windows[to_node][0] - (current_time + travel_time), 0)
         deviation_penalty = self.deviation_penalty(from_node, to_node)
-        cost = travel_time #+ deviation_penalty
+        cost = travel_time + wait_time  # + deviation_penalty
         return cost
 
     def initial_solution(self):
@@ -106,6 +115,50 @@ class CVRPTW:
         for v in range(self.vehicle_count):
             routes.append([])
         return routes
+
+    def calculate_route_time(self, route):
+        current_time = 0
+        total_time = 0
+        for i in range(len(route)):
+            if i == 0:
+                current_time = self.time_windows[route[i][0]][0]
+            else:
+                current_time = self.try_add_to_route(route[:i], route[i][0], current_time, 0, self.vehicle_capacities[0])[0]
+            total_time = current_time
+        return total_time
+
+    def update_route_params(self, route):
+        current_time = 0
+        vehicle_load = 0
+        for i in range(len(route)):
+            if i == 0:
+                current_time = self.time_windows[route[i][0]][0]
+                vehicle_load = 0
+            else:
+                current_time, vehicle_load, wait_time, success = self.try_add_to_route(route[:i], route[i][0], current_time, vehicle_load, self.vehicle_capacities[0])
+                if success:
+                    route[i] = (route[i][0], current_time, vehicle_load, wait_time)
+                else:
+                    return False
+        return route
+
+    def improve_route(self, route):
+        best_route = route
+        best_time = route[-1][1]
+        for i in range(1, len(route)):
+            for j in range(i + 1, len(route)):
+                new_route = deepcopy(best_route)
+                new_route[i:j] = new_route[i:j][::-1]
+                new_route = self.update_route_params(new_route)
+                if not new_route:
+                    continue
+
+                new_time = new_route[-1][1]
+                if new_time < best_time:
+                    best_route = new_route
+                    best_time = new_time
+
+        return best_route
 
     def try_add_to_route(self, route, location, current_time, vehicle_load, vehicle_capacity):
         # Calc arrival time
@@ -147,6 +200,7 @@ class CVRPTW:
             routes = self.construct_routes_greedy2()
         else:
             raise ValueError("Invalid solver specified.")
+        routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
         return routes
 
     def construct_routes_greedy(self):
@@ -270,6 +324,7 @@ if __name__ == "__main__":
     demands[0] = {}  # Depot has no demand
     product_volumes = {'A': 0.07, 'B': 0.1}
     time_windows = [(0, 24)] + [(random.randint(6, 10), random.randint(18, 20)) for _ in range(num_locations - 1)]
+    # time_windows = [(0, 24)] + [(8, 18) for _ in range(num_locations - 1)]
     vehicle_capacities = [random.uniform(10, 20) for _ in range(num_vehicles)]
 
     cvrptw = CVRPTW(locations, demands, product_volumes, time_windows, vehicle_capacities)
