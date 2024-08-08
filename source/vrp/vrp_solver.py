@@ -48,10 +48,57 @@ class CVRPTW:
         else:
             return 0
 
+    def predistribute_sectors(self):
+
+        def calculate_angle(location, center):
+            dx = location[0] - center[0]
+            dy = location[1] - center[1]
+            angle = np.arctan2(dy, dx)
+            return angle
+
+        loc_indices = [i for i in range(1, len(self.locations))]
+        angles = [0] + [calculate_angle(self.locations[p], self.locations[0]) for p in range(1, len(self.locations))]
+
+        # Sort points by angle from the center
+        loc_indices.sort(key=lambda p: calculate_angle(self.locations[p], self.locations[0]))
+        # Initialize sectors
+        sectors = [[] for _ in range(len(self.vehicle_capacities) + 1)]
+
+        # Distribute points to sectors
+        current_sector = 0
+        current_sector_start_angle = angles[0]
+        current_capacity = self.vehicle_capacities[current_sector]
+        current_volume = 0
+
+        for loc in loc_indices:
+
+            # Calc total volume of products for the location
+            loc_volume = 0
+            for product, quantity in self.demands[loc].items():
+                loc_volume += quantity * self.product_volumes[product]
+
+            if current_volume + loc_volume <= current_capacity and abs(angles[loc] - current_sector_start_angle) <= np.pi / 2:
+                # Add the point to the current sector
+                sectors[current_sector].append(loc)
+                current_volume += loc_volume
+            else:
+                current_sector_start_angle = angles[loc]
+                current_sector += 1
+                if current_sector < len(self.vehicle_capacities):
+                    current_capacity = self.vehicle_capacities[current_sector]
+                    current_volume = loc_volume
+                    sectors[current_sector].append(loc)
+                else:
+                    break
+                    sectors[-1].append(loc)
+
+
+        return sectors
+
     def travel_cost(self, from_node, to_node, current_time):
         travel_time = self.time_dependent_travel_time(from_node, to_node, current_time)
         deviation_penalty = self.deviation_penalty(from_node, to_node)
-        cost = travel_time + deviation_penalty
+        cost = travel_time #+ deviation_penalty
         return cost
 
     def initial_solution(self):
@@ -157,6 +204,8 @@ class CVRPTW:
         vehicle_loads = [0] * self.vehicle_count
         vehicle_times = [0] * self.vehicle_count
 
+        sectors = self.predistribute_sectors()
+
         while unvisited:
             progress = False
             for v in range(self.vehicle_count):
@@ -169,7 +218,7 @@ class CVRPTW:
                     loc for loc in unvisited
                     if vehicle_loads[v] + sum(
                         self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
-                       self.vehicle_capacities[v]
+                       self.vehicle_capacities[v] and loc in sectors[v]
                 ]
                 # Sort feasible locations by travel cost from current point
                 feasible_locations.sort(
@@ -224,7 +273,7 @@ if __name__ == "__main__":
     vehicle_capacities = [random.uniform(10, 20) for _ in range(num_vehicles)]
 
     cvrptw = CVRPTW(locations, demands, product_volumes, time_windows, vehicle_capacities)
-    routes = cvrptw.construct_routes()
+    routes = cvrptw.construct_routes('greedy2')
     cvrptw.print_routes(routes)
 
     draw = True
