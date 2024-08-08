@@ -66,7 +66,7 @@ class CVRPTW:
 
         # Distribute points to sectors
         current_sector = 0
-        current_sector_start_angle = angles[0]
+        current_sector_start_angle = angles[loc_indices[0]]
         current_capacity = self.vehicle_capacities[current_sector]
         current_volume = 0
 
