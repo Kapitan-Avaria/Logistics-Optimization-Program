@@ -1,6 +1,6 @@
 from datetime import datetime
 from time import sleep
-from yandex_in_browser_routing_tools import insert_data
+from source.routing.yandex_in_browser_routing_tools import insert_data
 
 
 

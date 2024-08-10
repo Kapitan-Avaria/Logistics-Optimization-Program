@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 
-from yandex_in_browser_routing_tools import insert_data
+from source.routing.yandex_in_browser_routing_tools import insert_data
 from time import sleep
 from tqdm import tqdm
 
