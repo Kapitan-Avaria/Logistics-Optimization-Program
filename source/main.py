@@ -8,8 +8,11 @@ from pathlib import Path
 
 from flask import Flask, render_template
 
+import folium
+
 
 app = Flask(__name__)
+vw = VRPWrapper()
 
 
 @app.route('/')
@@ -20,12 +23,19 @@ def index():
 
 @app.route('/build_routes')
 def build_routes():
-    return render_template("build_routes.html", title='Построение маршрутов')
+    m = folium.Map()
+    iframe = m.get_root()._repr_html_()
+
+    return render_template(
+        "build_routes.html",
+        title='Построение маршрутов',
+        vehicles=vw.vehicles,
+        orders=vw.orders,
+        folium_map=iframe
+    )
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
-
     db_path = Path('..').resolve() / 'database.db'
     url_1c = ''
 
@@ -34,10 +44,7 @@ if __name__ == '__main__':
     # gw = GeocodingWrapper()
     # rw = RoutingWrapper()
     db_is_empty = db_init(db_path)
+    # vw.request_data_from_1c(db_is_empty, url_1c)
+    vw.load_data_from_db()
 
-    vw = VRPWrapper()
-    vw.load_data(db_is_empty, url_1c)
-
-
-
-
+    app.run(debug=True)

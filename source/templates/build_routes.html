@@ -2,27 +2,57 @@
 
 {% block content %}
 <main>
-    <div>
-        <h2>Vehicles</h2>
-        <ul>
-            {% for v in vehicles %}
-                <li>{{ v }}</li>
-            {% endfor %}
-        </ul>
-    </div>
 
-    <div>
-        <h2>Orders</h2>
-        <ul>
-            <li>Order 1</li>
-            <li>Order 2</li>
-            <li>Order 3</li>
-        </ul>
-    </div>
+    <section class="container">
+        <div class="half">
+            <fieldset style="overflow-y:scroll; height: 256px;">
+                <legend>Выберите машины, которые будут участвовать в распределении</legend>
+                <ul>
+                    {% for v in vehicles %}
+                        <li>
+                            <input type="checkbox" name="select_vehicle_{{v['id']}}" id="select_vehicle_{{v['id']}}" checked>
+                            <label for="select_vehicle_{{v['id']}}">{{ v["name"] }}</label>
+                            {{ v["category"] }}
+                            {{ v["dimensions"] }}
+                            <details>
+                                <summary>Построенные маршруты</summary>
+                                <ul>
+                                    <li>
+                                        <details>
+                                            <summary>Маршрут {{ v["name"] }} 1</summary>
+                                            Содержимое маршрута
+                                        </details>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </fieldset>
 
-    <div>
-        <h2>Map</h2>
-        <p>Folium Map placeholder</p>
-    </div>
+            <fieldset style="overflow-y:scroll; height: 256px;">
+                <legend>Выберите заказы, которые будут участвовать в распределении</legend>
+                <ul>
+                    {% for o in orders %}
+                        <li>
+                            <input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}" checked>
+                            <label for="select_order_{{o['id']}}">{{ o["number"] }}</label>
+                            Client name
+                            Address
+                            Delivery zone
+                        </li>
+                    {% endfor %}
+                </ul>
+            </fieldset>
+        </div>
+
+        <div class="half">
+            {{ folium_map|safe }}
+            <p>Всего заказов: </p>
+            <p>Пропущено: </p>
+            <p>Успешно распределено: m из n</p>
+            <p>Не распределено: </p>
+        </div>
+    </section>
 </main>
 {% endblock %}

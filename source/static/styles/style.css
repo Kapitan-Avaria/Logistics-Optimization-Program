@@ -1,0 +1,10 @@
+.container {
+    display: table;
+    height: 100%;
+    width: 100%;
+}
+
+.half {
+    display: table-cell;
+    width: 50%;
+}
