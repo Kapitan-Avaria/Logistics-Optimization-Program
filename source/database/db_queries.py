@@ -44,7 +44,7 @@ def upsert_orders(orders: list[dict], session: Session):
         if existing_order.comment is None and order["comment"]:
             existing_order.comment = order["comment"]
 
-        if existing_order.status is None and order["status"]:
+        if existing_order.status is None and order["status"] is not None:
             existing_order.status = order["status"]
 
         if "products" in order.keys():
@@ -110,7 +110,7 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
             segment_exists = bool(segment)
 
             if segment_exists:
-                if segment[0]["direct_distance"] is not None:
+                if segment[0].direct_distance is not None:
                     continue
 
             select_existing_object(

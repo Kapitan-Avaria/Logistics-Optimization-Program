@@ -13,6 +13,7 @@ class VRPWrapper:
     def __init__(self):
         self.orders = []
         self.products = dict()
+        self.available_vehicles = []
         self.vehicles = []
         self.depot_address = dict()
 
@@ -52,9 +53,21 @@ class VRPWrapper:
         cvrptw.print_routes(routes)
         return routes
 
-    def load_data(self, db_is_empty, url_1c):
+    @staticmethod
+    def reload_address_if_not_geocoded(address):
         """
-        Loads the necessary data from 1C and from the local db
+        If there is no geolocation for the address, then request it from API and reload address
+        """
+        if address["longitude"] is None or address["latitude"] is None:
+            gw = GeocodingWrapper()
+            coords = gw.get_coordinates(address["string_address"])
+            insert_coords(address["string_address"], coords)
+            address = get_objects(class_name=Address, id=address["id"])
+        return address
+
+    def request_data_from_1c(self, db_is_empty, url_1c):
+        """
+        Loads the necessary data from 1C
         """
         client = HTTPClient1C(url_1c)
 
@@ -74,30 +87,24 @@ class VRPWrapper:
         available_orders = client.get_available_orders()
         upsert_orders(available_orders)
 
-        def reload_address_if_not_geocoded(address):
-            """
-            If there is no geolocation for the address, then request it from API and reload address
-            """
-            if address["longitude"] is None or address["latitude"] is None:
-                gw = GeocodingWrapper()
-                coords = gw.get_coordinates(address["string_address"])
-                insert_coords(address["string_address"], coords)
-                address = get_objects(class_name=Address, id=address["id"])
-            return address
-
         if self.request_coords_on_load:
             # Bulk geocoding the addresses that have no geolocation
             for o, order in enumerate(available_orders):
                 address = get_objects(class_name=Address, string_address=order["address"])
-                reload_address_if_not_geocoded(address)
+                self.reload_address_if_not_geocoded(address)
 
         # Load available vehicles from 1C
-        available_vehicles = client.get_available_vehicles()
-        for v in available_vehicles:
+        self.available_vehicles = client.get_available_vehicles()
+        for v in self.available_vehicles:
             vehicle_obj = get_objects(class_name=Vehicle, name=v["name"])
             if len(vehicle_obj) == 0:
                 upsert_vehicles(client.get_vehicle(v["name"]))
 
+
+    def load_data_from_db(self):
+        """
+        Loads the necessary data from 1C and from the local db
+        """
         # ***************************************
         # Load available orders from the database
         self.orders = get_objects(class_name=Order, status=0)
@@ -106,9 +113,9 @@ class VRPWrapper:
         for o, order in enumerate(self.orders):
             # Load products and address in each order
             order_products = get_objects(class_name=OrderProduct, order_id=order["id"])
-            address = get_objects(class_name=Address, id=order["address_id"])
+            address = get_objects(class_name=Address, id=order["address_id"])[0]
             if self.request_coords_on_load:
-                address = reload_address_if_not_geocoded(address)
+                address = self.reload_address_if_not_geocoded(address)
 
             self.orders[o]["products"] = order_products
             self.orders[o]["address"] = address
@@ -120,12 +127,17 @@ class VRPWrapper:
 
         # Load available vehicles from db
         self.vehicles = []
-        for av_vehicle in available_vehicles():
+        av_veh = self.available_vehicles if self.available_vehicles else get_objects(class_name=Vehicle)
+        for av_vehicle in av_veh:
             vehicle = get_objects(class_name=Vehicle, name=av_vehicle["name"])[0]
             self.vehicles.append(vehicle)
 
-        random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])
-        self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
+        random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])[0]
+        try:
+            self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
+        except IndexError:
+            print("[WARN]: Depot address was not loaded, inserting default")
+            self.depot_address = get_objects(class_name=Address, id=191)[0]
 
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
@@ -141,7 +153,7 @@ class VRPWrapper:
         self.demands = [{}] + [
             {p["product_id"]: p["quantity"] for p in self.orders[o]["products"]} for o in range(self.num_orders)
         ]
-        self.product_volumes = {p["product_id"]: p["volume"] for p in self.products}
+        self.product_volumes = {k: p["volume"] for k, p in self.products.items()}
         self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
         self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
