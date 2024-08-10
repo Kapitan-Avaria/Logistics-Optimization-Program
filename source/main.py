@@ -13,8 +13,14 @@ app = Flask(__name__)
 
 
 @app.route('/')
+@app.route('/index')
 def index():
-    return render_template("index.html")
+    return render_template("index.html",  title='Главная')
+
+
+@app.route('/build_routes')
+def build_routes():
+    return render_template("build_routes.html", title='Построение маршрутов')
 
 
 if __name__ == '__main__':
@@ -30,6 +36,7 @@ if __name__ == '__main__':
     db_is_empty = db_init(db_path)
 
     vw = VRPWrapper()
+    vw.load_data(db_is_empty, url_1c)
 
 
 
