@@ -145,6 +145,8 @@ class VRPWrapper:
         self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
         self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
+        print("Data loaded")
+
     def create_distance_evaluator(self, addresses):
         """
         Calculates 'matrices' of distances and durations between all nodes in the zone.
