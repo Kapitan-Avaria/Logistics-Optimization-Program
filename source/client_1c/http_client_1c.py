@@ -15,8 +15,8 @@ class HTTPClient1C:
     def get_all_products(self):
         return requests.get(self.url + 'products/get_all_products').json()["products"]
 
-    def get_product_by_name(self, name):
-        return requests.get(self.url + f'products/get_product_by_name/{name}').json()["products"]
+    def get_product(self, name):
+        return requests.get(self.url + f'products/get_product/{name}').json()["products"]
 
     def get_all_vehicles(self):
         return requests.get(self.url + 'vehicles/get_all_vehicles').json()["vehicles"]

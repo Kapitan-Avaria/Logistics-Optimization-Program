@@ -90,7 +90,7 @@ class VRPWrapper:
         if self.request_coords_on_load:
             # Bulk geocoding the addresses that have no geolocation
             for o, order in enumerate(available_orders):
-                address = get_objects(class_name=Address, string_address=order["address"])
+                address = get_objects(class_name=Address, string_address=order["address"])[0]
                 self.reload_address_if_not_geocoded(address)
 
         # Load available vehicles from 1C
@@ -99,7 +99,6 @@ class VRPWrapper:
             vehicle_obj = get_objects(class_name=Vehicle, name=v["name"])
             if len(vehicle_obj) == 0:
                 upsert_vehicles(client.get_vehicle(v["name"]))
-
 
     def load_data_from_db(self):
         """

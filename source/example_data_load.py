@@ -10,7 +10,7 @@ geo_locations = [['45.055403', '39.04805'], ['45.052761', '41.898494'], ['43.436
 
 
 # Generate example data to fill the db
-def generate_example_data():
+def generate_example_products():
     products_data = {"products": []}
     for p in range(10):
         product = {
@@ -19,7 +19,9 @@ def generate_example_data():
             "dimensions": [random.randint(180, 210), random.randint(45, 70), random.randint(14, 20)],
         }
         products_data["products"].append(product)
+    return products_data
 
+def generate_example_vehicles():
     vehicles_data = {"vehicles": []}
     for v in range(20):
         vehicle = {
@@ -29,7 +31,9 @@ def generate_example_data():
             "weight-capacity": random.randint(100, 1000),
         }
         vehicles_data["vehicles"].append(vehicle)
+    return vehicles_data
 
+def generate_example_orders():
     orders_data = {"orders": []}
     for o in range(190):
         order = {
@@ -53,8 +57,7 @@ def generate_example_data():
             "status": 0
         }
         orders_data["orders"].append(order)
-
-    return products_data, vehicles_data, orders_data
+    return orders_data
 
 
 if __name__ == "__main__":
@@ -62,7 +65,9 @@ if __name__ == "__main__":
     db_path = Path('..').resolve() / 'database.db'
     db_is_empty = db_init(db_path)
 
-    products, vehicles, orders = generate_example_data()
+    products = generate_example_products()
+    vehicles = generate_example_vehicles()
+    orders = generate_example_orders()
     depot_address = {
         "address": addresses[-1],
         "geo-location": {
