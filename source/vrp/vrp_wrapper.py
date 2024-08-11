@@ -3,6 +3,7 @@ from source.client_1c.http_client_1c import HTTPClient1C
 from source.routing.routing_wrapper import RoutingWrapper
 from source.geocoding.geocoding_wrapper import GeocodingWrapper
 from source.database.db_queries import *
+from source.constants import DEPOT_ADDRESS
 
 from datetime import datetime
 from copy import deepcopy
@@ -136,7 +137,7 @@ class VRPWrapper:
             self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
         except IndexError:
             print("[WARN]: Depot address was not loaded, inserting default")
-            self.depot_address = get_objects(class_name=Address, id=191)[0]
+            self.depot_address = get_objects(class_name=Address, string_address=DEPOT_ADDRESS)[0]
 
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
