@@ -9,12 +9,14 @@ class ORSRoutingClient:
         self.client = openrouteservice.Client(key=api_key)
 
     def get_distances(self, sources, destinations=None):
+        sources = [list(map(str, s)) for s in sources]
         if destinations is None:
             res = distance_matrix(
                 self.client,
                 locations=sources
             )
         else:
+            destinations = [list(map(str, d)) for d in destinations]
             res = distance_matrix(
                 self.client,
                 locations=sources+destinations,

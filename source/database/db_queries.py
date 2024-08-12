@@ -71,6 +71,8 @@ def insert_address_from_dict(d: dict, session: Session):
         if delivery_zone.depot_id is None and d["depot_address"]:
             depot_address: Address = select_existing_object(session, Address, string_address=d["depot_address"])
             delivery_zone.depot_id = depot_address.id
+        if delivery_zone.type is None and d["type"]:
+            delivery_zone.type = d["type"]
     return address
 
 

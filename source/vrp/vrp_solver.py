@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from copy import deepcopy
+import folium
 
 
 class CVRPTW:
@@ -17,7 +18,7 @@ class CVRPTW:
         return np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node])) * 1000
 
     def time_dependent_travel_time(self, from_node, to_node, current_time):
-        base_distance = self.calc_base_distance(from_node, to_node) / 1000  # Converting to kilometers
+        base_distance = float(self.calc_base_distance(from_node, to_node) / 1000)  # Converting to kilometers
         base_velocity = 30  # km/h
         min_velocity = 11
 
@@ -47,11 +48,10 @@ class CVRPTW:
         loc0 = self.locations[0]
         loc1 = self.locations[from_node]
         loc2 = self.locations[to_node]
-        angle1 = np.arctan2(loc2[1] - loc0[1], loc2[0] - loc0[0])
-        angle2 = np.arctan2(loc1[1] - loc0[1], loc1[0] - loc0[0])
+        angle1 = np.arctan2(float(loc2[1] - loc0[1]), float(loc2[0] - loc0[0]))
+        angle2 = np.arctan2(float(loc1[1] - loc0[1]), float(loc1[0] - loc0[0]))
         angle = abs(angle2 - angle1) % np.pi
         if angle > np.pi / 8:
-            print(angle)
             return (angle - np.pi / 8) / (np.pi - np.pi / 8) * 5
         else:
             return 0
@@ -61,7 +61,7 @@ class CVRPTW:
         def calculate_angle(location, center):
             dx = location[0] - center[0]
             dy = location[1] - center[1]
-            angle = np.arctan2(dy, dx)
+            angle = np.arctan2(float(dy), float(dx))
             return angle
 
         loc_indices = [i for i in range(1, len(self.locations))]
@@ -98,8 +98,6 @@ class CVRPTW:
                     sectors[current_sector].append(loc)
                 else:
                     break
-                    sectors[-1].append(loc)
-
 
         return sectors
 
@@ -193,14 +191,14 @@ class CVRPTW:
         # route.append((location, current_time, vehicle_load, wait_time))
         return current_time, vehicle_load, wait_time, True
 
-    def construct_routes(self, solver="greedy"):
+    def construct_routes(self, solver="greedy2"):
         if solver == "greedy":
             routes = self.construct_routes_greedy()
         elif solver == "greedy2":
             routes = self.construct_routes_greedy2()
         else:
             raise ValueError("Invalid solver specified.")
-        routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
+        # routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
         return routes
 
     def construct_routes_greedy(self):
@@ -313,6 +311,20 @@ class CVRPTW:
                     f"  Location: {loc}, Arrival Time: {arrival_time:.2f}, Load: {load:.2f}, Wait Time: {wait_time:.2f}")
             print(f"  Return to depot")
 
+    def draw_routes(self, locations, routes):
+        colors = [
+            'red', 'blue', 'gray', 'green', 'pink', 'darkgreen', 'darkred', 'lightred', 'orange', 'beige', 'lightgreen',
+            'darkblue', 'lightblue', 'purple', 'darkpurple', 'cadetblue', 'lightgray', 'black'
+        ]
+        m = folium.Map(location=locations[0], tiles='cartodbpositron', zoom_start=13)
+        for r, route in enumerate(routes):
+            route_locations = [locations[0]] + [locations[loc] for loc, _, _, _ in route] + [locations[0]]
+            folium.PolyLine(route_locations, color=colors[r % len(colors)], weight=2.5, opacity=1).add_to(m)
+            for i, loc in enumerate(route_locations):
+                folium.Marker(loc, tooltip=f"Location {i}", icon=folium.Icon(color=colors[r % len(colors)])).add_to(m)
+        m.show_in_browser()
+
+
 
 if __name__ == "__main__":
     # Generate Example Data
@@ -332,35 +344,5 @@ if __name__ == "__main__":
     cvrptw.print_routes(routes)
 
     draw = True
-    if not draw:
-        exit()
-
-    import folium
-
-    colors = [
-        'red',
-        'blue',
-        'gray',
-        'green',
-        'pink',
-        'darkgreen',
-        'darkred',
-        'lightred',
-        'orange',
-        'beige',
-        'lightgreen',
-        'darkblue',
-        'lightblue',
-        'purple',
-        'darkpurple',
-        'cadetblue',
-        'lightgray',
-        'black'
-    ]
-    m = folium.Map(location=locations[0], tiles='cartodbpositron', zoom_start=13)
-    for r, route in enumerate(routes):
-        route_locations = [locations[0]] + [locations[loc] for loc, _, _, _ in route] + [locations[0]]
-        folium.PolyLine(route_locations, color=colors[r % len(colors)], weight=2.5, opacity=1).add_to(m)
-        for i, loc in enumerate(route_locations):
-            folium.Marker(loc, tooltip=f"Location {i}", icon=folium.Icon(color=colors[r % len(colors)])).add_to(m)
-    m.show_in_browser()
+    if draw:
+        cvrptw.draw_routes()

@@ -21,6 +21,7 @@ def generate_example_products():
         products_data["products"].append(product)
     return products_data
 
+
 def generate_example_vehicles():
     vehicles_data = {"vehicles": []}
     for v in range(20):
@@ -33,14 +34,16 @@ def generate_example_vehicles():
         vehicles_data["vehicles"].append(vehicle)
     return vehicles_data
 
+
 def generate_example_orders():
     orders_data = {"orders": []}
     for o in range(190):
+        time_start = random.randint(6, 10)
         order = {
             "number": f"Order {o}",
             "date": f"2023-05-{random.randint(1, 30)}",
-            "delivery-time-start": f"{random.randint(0, 23)}:{random.randint(0, 59)}",
-            "delivery-time-end": f"{random.randint(0, 23)}:{random.randint(0, 59)}",
+            "delivery-time-start": f"{time_start}:{random.randint(0, 59)}",
+            "delivery-time-end": f"{max(random.randint(14, 23), time_start + 1)}:{random.randint(0, 59)}",
             "client": f"Client {random.randint(1, 100)}",
             "address": addresses[o],
             "comment": "",
@@ -54,7 +57,8 @@ def generate_example_orders():
                 {"name": f"Product {p}", "quantity": random.randint(2, 50)}
                 for p in range(random.randint(1, 10))
             ],
-            "status": 0
+            "status": 0,
+            "depot_address": "Республика Адыгея, п.Яблоновский, ул.Индустриальная 4"
         }
         orders_data["orders"].append(order)
     return orders_data

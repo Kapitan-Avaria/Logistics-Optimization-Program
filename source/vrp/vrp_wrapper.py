@@ -7,6 +7,7 @@ from source.constants import DEPOT_ADDRESS
 
 from datetime import datetime
 from copy import deepcopy
+import folium
 
 
 class VRPWrapper:
@@ -23,6 +24,7 @@ class VRPWrapper:
         self.approved_routes = []
         self.actual_volume_ratio = 0.8  # A coefficient to diminish volume of the vehicle
         self.request_coords_on_load = True
+        self.map = folium.Map()
 
         # VRP data
         self.num_orders = 0
@@ -33,13 +35,74 @@ class VRPWrapper:
         self.time_windows = []
         self.vehicle_capacities = []
 
+    def run(self, vehicles_ids, orders_ids):
+        def vehicle_index_from_vehicle_id(v_id):
+            for i in range(len(self.vehicles)):
+                if self.vehicles[i]["id"] == v_id:
+                    return i
+            raise Exception(f"Vehicle with id {v_id} not found")
+
+        def address_index_from_order_id(o_id):
+            for i in range(len(self.orders)):
+                if self.orders[i]["id"] == o_id:
+                    return i + 1
+            raise Exception(f"Order with id {o_id} not found")
+
+        def convert_routes(routes, locations_indices):
+            converted_routes = []
+            for route in routes:
+                converted_route = []
+                for i, point in enumerate(route):
+                    converted_route.append({
+                        'address': self.addresses[locations_indices[i]],
+                        'arrival_time': point[1],
+                        'load': point[2],
+                        'wait_time': point[3]
+                    })
+                converted_routes.append(converted_route)
+            return converted_routes
+
+        for i, v in enumerate(self.vehicles):
+            self.vehicles[i]["routes"] = []
+
+        vehicles_indices_b = []
+        vehicles_indices_c = []
+        addresses_indices_b = [0]
+        addresses_indices_c = [0]
+
+        for v_id in vehicles_ids:
+            i = vehicle_index_from_vehicle_id(v_id)
+            if self.vehicles[i]["category"] == "B":
+                vehicles_indices_b.append(i)
+            elif self.vehicles[i]["category"] == "C":
+                vehicles_indices_c.append(i)
+
+        for o_id in orders_ids:
+            i = address_index_from_order_id(o_id)
+            if self.addresses[i]["delivery_zone_type"] == "B":
+                addresses_indices_b.append(i)
+            elif self.addresses[i]["delivery_zone_type"] == "C":
+                addresses_indices_c.append(i)
+
+        routes_b = self.build_routes(vehicles_indices_b, addresses_indices_b)
+        routes_c = self.build_routes(vehicles_indices_c, addresses_indices_c)
+        routes = routes_b + routes_c
+
+        for v in vehicles_indices_b:
+            self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_b)[0])
+        for v in vehicles_indices_c:
+            self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_c)[0])
+        self.draw_map()
+
     def build_routes(self, vehicles_indices, addresses_indices):
         """
         Solves CVRPTW problem for the selected vehicles and addresses
         """
         try:
+            raise Exception("ORS-based distance evaluator is not stable and not invoked")
             distance_evaluator = self.create_distance_evaluator([self.addresses[i] for i in addresses_indices])
-        except NoSegmentDataError:
+        except Exception as e:
+            print(e)
             distance_evaluator = None
 
         cvrptw = CVRPTW(
@@ -53,6 +116,47 @@ class VRPWrapper:
         routes = cvrptw.construct_routes()
         cvrptw.print_routes(routes)
         return routes
+
+    def draw_map(self):
+        """
+        Draws the map with the routes
+        """
+        self.map = folium.Map(location=[self.depot_address["latitude"], self.depot_address["longitude"]], zoom_start=8)
+        colors = [
+            'red', 'blue', 'gray', 'green', 'pink', 'darkgreen', 'darkred', 'lightred', 'orange', 'beige', 'lightgreen',
+            'darkblue', 'lightblue', 'purple', 'darkpurple', 'cadetblue', 'lightgray', 'black'
+        ]
+        routes = [v["routes"][0] for v in self.vehicles if len(v["routes"]) > 0]
+        for r, route in enumerate(routes):
+            route_group = folium.FeatureGroup(name=f'<span style="color: {colors[r % len(colors)]};">Route {r + 1}</span>')
+            for i in range(1, len(route)):
+                loc = route[i]["address"]
+                marker = folium.Marker(
+                    location=[loc["latitude"], loc["longitude"]],
+                    tooltip=f"Location: {i}, "
+                            f"Arrival Time: {route[i]['arrival_time']:.2f}, "
+                            f"Load: {route[i]['load']:.2f}, "
+                            f"Wait Time: {route[i]['wait_time']:.2f}",
+                    icon=folium.Icon(color="blue", icon="info-sign")
+                )
+                route_group.add_child(marker)
+            route_locations = [[self.depot_address["latitude"], self.depot_address["longitude"]]] + [
+                [route[i]["address"]["latitude"], route[i]["address"]["longitude"]] for i in range(len(route))
+            ]
+            polyline = folium.PolyLine(
+                locations=route_locations,
+                color=colors[r % len(colors)],
+                weight=2.5,
+                opacity=1
+            )
+            route_group.add_child(polyline)
+            self.map.add_child(route_group)
+        folium.Marker(
+            location=[self.depot_address["latitude"], self.depot_address["longitude"]],
+            tooltip=f"Склад: {self.depot_address['string_address']}",
+            icon=folium.Icon(color="red", icon="home")
+        ).add_to(self.map)
+        folium.LayerControl(collapsed=False).add_to(self.map)
 
     @staticmethod
     def reload_address_if_not_geocoded(address):
@@ -116,6 +220,8 @@ class VRPWrapper:
             address = get_objects(class_name=Address, id=order["address_id"])[0]
             if self.request_coords_on_load:
                 address = self.reload_address_if_not_geocoded(address)
+            delivery_zone_type = get_objects(class_name=DeliveryZone, id=address["delivery_zone_id"])[0]["type"]
+            address["delivery_zone_type"] = delivery_zone_type
 
             self.orders[o]["products"] = order_products
             self.orders[o]["address"] = address
@@ -130,6 +236,7 @@ class VRPWrapper:
         av_veh = self.available_vehicles if self.available_vehicles else get_objects(class_name=Vehicle)
         for av_vehicle in av_veh:
             vehicle = get_objects(class_name=Vehicle, name=av_vehicle["name"])[0]
+            vehicle["routes"] = []
             self.vehicles.append(vehicle)
 
         random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])[0]
@@ -154,7 +261,12 @@ class VRPWrapper:
             {p["product_id"]: p["quantity"] for p in self.orders[o]["products"]} for o in range(self.num_orders)
         ]
         self.product_volumes = {k: p["volume"] for k, p in self.products.items()}
-        self.time_windows = [(0, 24)] + [self.orders[o] for o in range(self.num_orders)]
+        self.time_windows = [(0, 24)] + [
+            (
+                self.orders[o]["delivery_time_start"].hour + self.orders[o]["delivery_time_start"].minute / 60,
+                self.orders[o]["delivery_time_end"].hour + self.orders[o]["delivery_time_end"].minute / 60
+            ) for o in range(self.num_orders)
+        ]
         self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
 
         print("Data loaded")
@@ -230,6 +342,3 @@ class VRPWrapper:
 
         return distance_evaluator
 
-
-class NoSegmentDataError(Exception):
-    pass

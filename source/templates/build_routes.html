@@ -7,12 +7,16 @@
     </form>
     <section class="container">
         <div class="half">
-            <fieldset style="overflow-y:scroll; height: 256px;">
-                <legend>Выберите машины, которые будут участвовать в распределении</legend>
-                <ul>
-                    {% for v in vehicles %}
+            <form action="/run_vrp" method="post">
+                <button name="run_vrp" value="">Построить маршруты</button>
+
+                <fieldset style="overflow-y:scroll; height: 256px;">
+                    <legend>Выберите машины, которые будут участвовать в распределении</legend>
+                    <ul>
+                        {% for v in vehicles %}
                         <li>
-                            <input type="checkbox" name="select_vehicle_{{v['id']}}" id="select_vehicle_{{v['id']}}" checked>
+                            <input type="checkbox" name="select_vehicle_{{v['id']}}" id="select_vehicle_{{v['id']}}"
+                                   checked>
                             <label for="select_vehicle_{{v['id']}}">{{ v["name"] }}</label>
                             {{ v["category"] }}
                             {{ v["dimensions"] }}
@@ -28,24 +32,26 @@
                                 </ul>
                             </details>
                         </li>
-                    {% endfor %}
-                </ul>
-            </fieldset>
+                        {% endfor %}
+                    </ul>
+                </fieldset>
 
-            <fieldset style="overflow-y:scroll; height: 256px;">
-                <legend>Выберите заказы, которые будут участвовать в распределении</legend>
-                <ul>
-                    {% for o in orders %}
+                <fieldset style="overflow-y:scroll; height: 256px;">
+                    <legend>Выберите заказы, которые будут участвовать в распределении</legend>
+                    <ul>
+                        {% for o in orders %}
                         <li>
-                            <input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}" checked>
+                            <input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}"
+                                   checked>
                             <label for="select_order_{{o['id']}}">{{ o["number"] }}</label>
                             Client name
                             Address
                             Delivery zone
                         </li>
-                    {% endfor %}
-                </ul>
-            </fieldset>
+                        {% endfor %}
+                    </ul>
+                </fieldset>
+            </form>
         </div>
 
         <div class="half">

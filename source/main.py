@@ -23,8 +23,7 @@ def index():
 
 @app.route('/build_routes')
 def build_routes():
-    m = folium.Map()
-    iframe = m.get_root()._repr_html_()
+    iframe = vw.map.get_root()._repr_html_()
 
     return render_template(
         "build_routes.html",
@@ -43,16 +42,32 @@ def load_data_from_db():
     return redirect('/build_routes')
 
 
+@app.route('/run_vrp', methods=['POST'])
+def run_vrp():
+    if request.method == 'POST':
+        vehicles_ids = []
+        orders_ids = []
+        for k, v in request.form.items():
+            if 'select_vehicle_' in k:
+                vehicle_id = int(k.removeprefix('select_vehicle_'))
+                if v == 'on':
+                    vehicles_ids.append(vehicle_id)
+            if 'select_order_' in k:
+                order_id = int(k.removeprefix('select_order_'))
+                if v == 'on':
+                    orders_ids.append(order_id)
+
+        vw.run(vehicles_ids, orders_ids)
+    return redirect('/build_routes')
+
+
 if __name__ == '__main__':
     db_path = Path('..').resolve() / 'database.db'
     url_1c = 'http://127.0.0.1:5001'
 
     # Initialize main clients and wrappers
-    # client1c = HTTPClient1C(url_1c)
-    # gw = GeocodingWrapper()
-    # rw = RoutingWrapper()
     db_is_empty = db_init(db_path)
-    # vw.request_data_from_1c(db_is_empty, url_1c)
-    # vw.load_data_from_db()
+    vw.request_data_from_1c(db_is_empty, url_1c)
+    vw.load_data_from_db()
 
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5002)
