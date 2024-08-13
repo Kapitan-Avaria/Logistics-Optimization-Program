@@ -54,7 +54,7 @@ def generate_example_orders():
             "delivery-zone": f"Zone {random.randint(1, 10)}",
             "type": random.choice(["B", "C"]),
             "products": [
-                {"name": f"Product {p}", "quantity": random.randint(2, 50)}
+                {"name": f"Product {p}", "quantity": random.randint(2, 20)}
                 for p in range(random.randint(1, 10))
             ],
             "status": 0,

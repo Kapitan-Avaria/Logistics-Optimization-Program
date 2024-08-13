@@ -151,7 +151,7 @@ def db_init(db_path=DB_PATH):
     if not database_exists(engine.url):
         create_database(engine.url)
         is_empty = True
-    print(database_exists(engine.url))
+    print(database_exists(engine.url), __name__)
 
     Base.metadata.create_all(engine)
 

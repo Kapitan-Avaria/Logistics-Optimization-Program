@@ -35,17 +35,17 @@ class VRPWrapper:
         self.time_windows = []
         self.vehicle_capacities = []
 
-    def run(self, vehicles_ids, orders_ids):
+    def run(self, vehicles_ids, orders_ids, category_matters=False):
         def vehicle_index_from_vehicle_id(v_id):
             for i in range(len(self.vehicles)):
                 if self.vehicles[i]["id"] == v_id:
                     return i
             raise Exception(f"Vehicle with id {v_id} not found")
 
-        def address_index_from_order_id(o_id):
+        def order_index_from_order_id(o_id):
             for i in range(len(self.orders)):
                 if self.orders[i]["id"] == o_id:
-                    return i + 1
+                    return i
             raise Exception(f"Order with id {o_id} not found")
 
         def convert_routes(routes, locations_indices):
@@ -54,7 +54,8 @@ class VRPWrapper:
                 converted_route = []
                 for i, point in enumerate(route):
                     converted_route.append({
-                        'address': self.addresses[locations_indices[i]],
+                        # 'order': self.orders[locations_indices[point[0]]],
+                        'address': self.addresses[locations_indices[point[0]]],
                         'arrival_time': point[1],
                         'load': point[2],
                         'wait_time': point[3]
@@ -65,34 +66,50 @@ class VRPWrapper:
         for i, v in enumerate(self.vehicles):
             self.vehicles[i]["routes"] = []
 
-        vehicles_indices_b = []
-        vehicles_indices_c = []
-        addresses_indices_b = [0]
-        addresses_indices_c = [0]
+        if category_matters:
+            vehicles_indices_b = []
+            vehicles_indices_c = []
+            addresses_indices_b = [0]
+            addresses_indices_c = [0]
 
-        for v_id in vehicles_ids:
-            i = vehicle_index_from_vehicle_id(v_id)
-            if self.vehicles[i]["category"] == "B":
-                vehicles_indices_b.append(i)
-            elif self.vehicles[i]["category"] == "C":
-                vehicles_indices_c.append(i)
+            for v_id in vehicles_ids:
+                i = vehicle_index_from_vehicle_id(v_id)
+                if self.vehicles[i]["category"] == "B":
+                    vehicles_indices_b.append(i)
+                elif self.vehicles[i]["category"] == "C":
+                    vehicles_indices_c.append(i)
 
-        for o_id in orders_ids:
-            i = address_index_from_order_id(o_id)
-            if self.addresses[i]["delivery_zone_type"] == "B":
-                addresses_indices_b.append(i)
-            elif self.addresses[i]["delivery_zone_type"] == "C":
-                addresses_indices_c.append(i)
+            for o_id in orders_ids:
+                i = order_index_from_order_id(o_id)
+                # self.unassigned_orders.remove(i)
+                if self.addresses[i + 1]["delivery_zone_type"] == "B":
+                    addresses_indices_b.append(i + 1)
+                elif self.addresses[i + 1]["delivery_zone_type"] == "C":
+                    addresses_indices_c.append(i + 1)
 
-        routes_b = self.build_routes(vehicles_indices_b, addresses_indices_b)
-        routes_c = self.build_routes(vehicles_indices_c, addresses_indices_c)
-        routes = routes_b + routes_c
+            routes_b = self.build_routes(vehicles_indices_b, addresses_indices_b)
+            routes_c = self.build_routes(vehicles_indices_c, addresses_indices_c)
+            routes = routes_b + routes_c
 
-        for v in vehicles_indices_b:
-            self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_b)[0])
-        for v in vehicles_indices_c:
-            self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_c)[0])
+            for v in vehicles_indices_b:
+                self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_b)[0])
+            for v in vehicles_indices_c:
+                self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_c)[0])
+        else:
+            vehicles_indices = [vehicle_index_from_vehicle_id(v_id) for v_id in vehicles_ids]
+            addresses_indices = [order_index_from_order_id(o_id) + 1 for o_id in orders_ids]
+            routes = self.build_routes(vehicles_indices, addresses_indices)
+            for v in vehicles_indices:
+                self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices)[0])
         self.draw_map()
+
+    def calc_total_loc_volume(self, loc):
+        if loc == 0:
+            return 0
+        loc_volume = 0
+        for product, quantity in self.demands[loc].items():
+            loc_volume += quantity * self.product_volumes[product]
+        return loc_volume
 
     def build_routes(self, vehicles_indices, addresses_indices):
         """
@@ -127,9 +144,17 @@ class VRPWrapper:
             'darkblue', 'lightblue', 'purple', 'darkpurple', 'cadetblue', 'lightgray', 'black'
         ]
         routes = [v["routes"][0] for v in self.vehicles if len(v["routes"]) > 0]
+        routes = [route for route in routes if len(route) > 0]
+        for i in range(1, len(self.locations)):
+            if i-1 in self.unassigned_orders:
+                folium.Marker(
+                    location=[self.locations[i][1], self.locations[i][0]],
+                    tooltip=f"Адрес: {self.addresses[i]['string_address']},\n[{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}]",
+                    icon=folium.Icon(color="blue", icon="info-sign")
+                ).add_to(self.map)
         for r, route in enumerate(routes):
             route_group = folium.FeatureGroup(name=f'<span style="color: {colors[r % len(colors)]};">Route {r + 1}</span>')
-            for i in range(1, len(route)):
+            for i in range(len(route)):
                 loc = route[i]["address"]
                 marker = folium.Marker(
                     location=[loc["latitude"], loc["longitude"]],
@@ -137,7 +162,7 @@ class VRPWrapper:
                             f"Arrival Time: {route[i]['arrival_time']:.2f}, "
                             f"Load: {route[i]['load']:.2f}, "
                             f"Wait Time: {route[i]['wait_time']:.2f}",
-                    icon=folium.Icon(color="blue", icon="info-sign")
+                    icon=folium.Icon(color="green", icon="ok-sign")
                 )
                 route_group.add_child(marker)
             route_locations = [[self.depot_address["latitude"], self.depot_address["longitude"]]] + [
@@ -156,6 +181,7 @@ class VRPWrapper:
             tooltip=f"Склад: {self.depot_address['string_address']}",
             icon=folium.Icon(color="red", icon="home")
         ).add_to(self.map)
+
         folium.LayerControl(collapsed=False).add_to(self.map)
 
     @staticmethod
@@ -177,15 +203,14 @@ class VRPWrapper:
         client = HTTPClient1C(url_1c)
 
         # Load historical and utility data from 1C if database was created for the first time
-        if db_is_empty:
-            all_products = client.get_all_products()
-            upsert_products(all_products)
+        all_products = client.get_all_products()
+        upsert_products(all_products)
 
-            all_vehicles = client.get_all_vehicles()
-            upsert_vehicles(all_vehicles)
+        all_vehicles = client.get_all_vehicles()
+        upsert_vehicles(all_vehicles)
 
-            archived_orders = client.get_archived_orders()
-            upsert_orders(archived_orders)
+        archived_orders = client.get_archived_orders()
+        upsert_orders(archived_orders)
 
         # Load operational data from 1C
         # Load available orders to the database
@@ -245,6 +270,7 @@ class VRPWrapper:
         except IndexError:
             print("[WARN]: Depot address was not loaded, inserting default")
             self.depot_address = get_objects(class_name=Address, string_address=DEPOT_ADDRESS)[0]
+        self.depot_address = self.reload_address_if_not_geocoded(self.depot_address)
 
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
@@ -254,7 +280,6 @@ class VRPWrapper:
         self.num_orders = len(self.orders)
 
         self.addresses = [self.depot_address] + [self.orders[o]["address"] for o in range(self.num_orders)]
-
         self.locations = [(a["longitude"], a["latitude"]) for a in self.addresses]
 
         self.demands = [{}] + [
@@ -268,6 +293,11 @@ class VRPWrapper:
             ) for o in range(self.num_orders)
         ]
         self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
+
+        # Calc total volume of each order
+        for o, order in enumerate(self.orders):
+            order_volume = self.calc_total_loc_volume(o + 1)
+            self.orders[o]["volume"] = order_volume
 
         print("Data loaded")
 

@@ -20,13 +20,26 @@
                             <label for="select_vehicle_{{v['id']}}">{{ v["name"] }}</label>
                             {{ v["category"] }}
                             {{ v["dimensions"] }}
+                            Начало смены:
+                            <input type="time" name="work_start_{{v['id']}}" id="work_start_{{v['id']}}" value="{{shift_start_b if v['category'] == 'B' else shift_start_c}}">
+                            Длительность смены:
+                            <input type="time" name="work_duration_{{v['id']}}" id="work_duration_{{v['id']}}" value="{{shift_dur_b if v['category'] == 'B' else shift_dur_c}}">
                             <details>
                                 <summary>Построенные маршруты</summary>
                                 <ul>
                                     <li>
                                         <details>
                                             <summary>Маршрут {{ v["name"] }} 1</summary>
-                                            Содержимое маршрута
+                                            <ol>
+                                                {% for loc in v["routes"][0] %}
+                                                <li>
+                                                    {{ loc["address"]["string_address"] }}
+                                                    {{ loc["arrival_time"] }}
+                                                    {{ loc["load"] }}
+                                                    {{ loc["wait_time"] }}
+                                                </li>
+                                                {% endfor %}
+                                            </ol>
                                         </details>
                                     </li>
                                 </ul>
@@ -44,9 +57,10 @@
                             <input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}"
                                    checked>
                             <label for="select_order_{{o['id']}}">{{ o["number"] }}</label>
-                            Client name
-                            Address
-                            Delivery zone
+                            Client: {{ o["client_id"] }},
+                            Address: {{ o["address"]["string_address"] }},
+                            Delivery_zone: {{ o["address"]["delivery_zone_id"] }}
+                            Total volume: {{ o["volume"] }}
                         </li>
                         {% endfor %}
                     </ul>

@@ -12,9 +12,9 @@ class GeocodingWrapper:
             "yandex": YandexGeoClient(YANDEX_GEO_API_KEY)
         }
     
-    def get_coordinates(self, address_string, time_sleep_seconds=1):
+    def get_coordinates(self, string_address, time_sleep_seconds=1):
         # Get the address object from the db
-        address_object = get_objects(class_name=Address, address_string=address_string)[0]
+        address_object = get_objects(class_name=Address, string_address=string_address)[0]
         # Get coords from address if exist
         coords = (float(address_object['longitude']), float(address_object['latitude'])) \
             if (address_object['longitude'] is not None and address_object['latitude'] is not None) \
@@ -22,7 +22,7 @@ class GeocodingWrapper:
 
         # Get coords from geocoder only if there are no coords in the address
         if coords is None:
-            coords = self.geo_clients["yandex"].get_coordinates(address_string)
+            coords = self.geo_clients["yandex"].get_coordinates(string_address)
             sleep(time_sleep_seconds)
 
         return coords

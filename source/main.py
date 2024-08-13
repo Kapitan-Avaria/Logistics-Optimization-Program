@@ -7,6 +7,7 @@ from vrp.vrp_wrapper import VRPWrapper
 from pathlib import Path
 
 from flask import Flask, render_template, redirect, request
+from constants import *
 
 import folium
 
@@ -30,7 +31,11 @@ def build_routes():
         title='Построение маршрутов',
         vehicles=vw.vehicles,
         orders=vw.orders,
-        folium_map=iframe
+        folium_map=iframe,
+        shift_start_b=DEFAULT_SHIFT_START_B,
+        shift_start_c=DEFAULT_SHIFT_START_C,
+        shift_dur_b=DEFAULT_SHIFT_DURATION_B,
+        shift_dur_c=DEFAULT_SHIFT_DURATION_C,
     )
 
 

@@ -198,7 +198,7 @@ class CVRPTW:
             routes = self.construct_routes_greedy2()
         else:
             raise ValueError("Invalid solver specified.")
-        # routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
+        routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
         return routes
 
     def construct_routes_greedy(self):
@@ -233,8 +233,8 @@ class CVRPTW:
                     vehicle_load = vehicle_loads[v]
                     new_time, new_load, wait_time, success = self.try_add_to_route(routes[v], loc, current_time,
                                                                                    vehicle_load, self.vehicle_capacities[v])
-                    routes[v].append((loc, new_time, new_load, wait_time))
                     if success:
+                        routes[v].append((loc, new_time, new_load, wait_time))
                         vehicle_times[v] = new_time
                         vehicle_loads[v] = new_load
                         unvisited.remove(loc)
@@ -285,9 +285,8 @@ class CVRPTW:
                     new_time, new_load, wait_time, success = self.try_add_to_route(routes[v], loc, current_time,
                                                                                    vehicle_load,
                                                                                    self.vehicle_capacities[v])
-                    routes[v].append((loc, new_time, new_load, wait_time))
                     if success:
-
+                        routes[v].append((loc, new_time, new_load, wait_time))
                         vehicle_times[v] = new_time
                         vehicle_loads[v] = new_load
                         unvisited.remove(loc)
@@ -305,7 +304,7 @@ class CVRPTW:
 
     def print_routes(self, routes):
         for v, route in enumerate(routes):
-            print(f"\nVehicle {v + 1} Route:")
+            print(f"\nVehicle {v + 1}. Capacity: {self.vehicle_capacities[v]}. Route:")
             for loc, arrival_time, load, wait_time in route:
                 print(
                     f"  Location: {loc}, Arrival Time: {arrival_time:.2f}, Load: {load:.2f}, Wait Time: {wait_time:.2f}")
