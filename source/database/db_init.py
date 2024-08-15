@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
 
-from source.constants import DB_PATH
+from source.config import Config
 
 Base = declarative_base()
 engine = None
@@ -137,7 +137,7 @@ class FormFactor(Base):
     dimensions_template = Column(JSON)
 
 
-def db_init(db_path=DB_PATH):
+def db_init(db_path=Config().DB_PATH):
     global engine
     global Session
     is_empty = False

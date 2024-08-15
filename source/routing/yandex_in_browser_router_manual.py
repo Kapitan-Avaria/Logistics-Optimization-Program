@@ -3,7 +3,6 @@ from time import sleep
 from source.routing.yandex_in_browser_routing_tools import insert_data
 
 
-
 class YandexManualRoutingHelper:
     def parse_urls(urls):
         for url, date, t, segment_id in urls:

@@ -1,19 +1,14 @@
 from database.db_init import db_init
-
-from client_1c.http_client_1c import HTTPClient1C
-from geocoding.geocoding_wrapper import GeocodingWrapper
-from routing.routing_wrapper import RoutingWrapper
 from vrp.vrp_wrapper import VRPWrapper
+from config import Config
+
 from pathlib import Path
-
 from flask import Flask, render_template, redirect, request
-from constants import *
-
-import folium
 
 
 app = Flask(__name__)
 vw = VRPWrapper()
+cfg = Config()
 
 
 @app.route('/')
@@ -32,10 +27,10 @@ def build_routes():
         vehicles=vw.vehicles,
         orders=vw.orders,
         folium_map=iframe,
-        shift_start_b=DEFAULT_SHIFT_START_B,
-        shift_start_c=DEFAULT_SHIFT_START_C,
-        shift_dur_b=DEFAULT_SHIFT_DURATION_B,
-        shift_dur_c=DEFAULT_SHIFT_DURATION_C,
+        shift_start_b=cfg.DEFAULT_SHIFT_START_B,
+        shift_start_c=cfg.DEFAULT_SHIFT_START_C,
+        shift_dur_b=cfg.DEFAULT_SHIFT_DURATION_B,
+        shift_dur_c=cfg.DEFAULT_SHIFT_DURATION_C,
     )
 
 
