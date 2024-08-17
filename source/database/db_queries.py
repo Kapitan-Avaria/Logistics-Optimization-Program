@@ -90,12 +90,13 @@ def insert_address_from_order(order, session: Session):
 
 @use_with_session
 def insert_segments_where_lacking(required_segments_number, session: Session):
+    print('Inserting lacking segments...')
     addresses = session.query(Address).all()
     for address in addresses:
         segments = session.query(Segment).filter_by(address_1_id=address.id).all()
         segments_number = len(segments)
         # If there are enough outgoing segments, skip the address
-        if segments_number >= required_segments_number:
+        if segments_number >= required_segments_number or segments_number >= len(addresses) - 1:
             continue
 
         # Calc direct distances from this address to another
@@ -129,6 +130,7 @@ def insert_segments_where_lacking(required_segments_number, session: Session):
 
             if segments_number >= required_segments_number:
                 break
+    print('Lacking segments inserted')
 
 
 @use_with_session
