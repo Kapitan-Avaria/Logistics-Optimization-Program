@@ -18,6 +18,7 @@ class VRPWrapper:
         self.available_vehicles = []
         self.vehicles = []
         self.depot_address = dict()
+        self.clients = dict()
 
         self.unassigned_vehicles = []
         self.unassigned_orders = []
@@ -116,8 +117,9 @@ class VRPWrapper:
         Solves CVRPTW problem for the selected vehicles and addresses
         """
         try:
+            raise Exception("ORS-based evaluator is too slow right now and not invoked")
             distance_evaluator = self.create_distance_evaluator([self.addresses[i] for i in addresses_indices])
-        except ChildProcessError as e:
+        except Exception as e:
             print(e)
             distance_evaluator = None
 
@@ -192,7 +194,7 @@ class VRPWrapper:
             gw = GeocodingWrapper()
             coords = gw.get_coordinates(address["string_address"])
             insert_coords(address["string_address"], coords)
-            address = get_objects(class_name=Address, id=address["id"])
+            address = get_objects(class_name=Address, id=address["id"])[0]
         return address
 
     def request_data_from_1c(self, db_is_empty, url_1c):
@@ -235,7 +237,6 @@ class VRPWrapper:
         """
         # ***************************************
         # Load available orders from the database
-        insert_segments_where_lacking(100000)
         self.orders = get_objects(class_name=Order, status=0)
         self.products = dict()
 
@@ -243,10 +244,14 @@ class VRPWrapper:
             # Load products and address in each order
             order_products = get_objects(class_name=OrderProduct, order_id=order["id"])
             address = get_objects(class_name=Address, id=order["address_id"])[0]
+            client = get_objects(class_name=Client, id=order["client_id"])[0]
             if self.request_coords_on_load:
                 address = self.reload_address_if_not_geocoded(address)
-            delivery_zone_type = get_objects(class_name=DeliveryZone, id=address["delivery_zone_id"])[0]["type"]
-            address["delivery_zone_type"] = delivery_zone_type
+
+            delivery_zone = get_objects(class_name=DeliveryZone, id=address["delivery_zone_id"])[0]
+            address["delivery_zone"] = delivery_zone["name"]
+            address["delivery_zone_type"] = delivery_zone["type"]
+            self.clients[client["id"]] = client
 
             self.orders[o]["products"] = order_products
             self.orders[o]["address"] = address
@@ -275,6 +280,7 @@ class VRPWrapper:
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
 
+        insert_segments_where_lacking(100000)
         # ***************************
         # Prepare VRP data
         self.num_orders = len(self.orders)
