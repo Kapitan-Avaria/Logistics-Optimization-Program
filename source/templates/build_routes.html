@@ -57,9 +57,9 @@
                             <input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}"
                                    checked>
                             <label for="select_order_{{o['id']}}">{{ o["number"] }}</label>
-                            Client: {{ o["client_id"] }},
+                            Client: {{ clients[o["client_id"]]["name"] }},
                             Address: {{ o["address"]["string_address"] }},
-                            Delivery_zone: {{ o["address"]["delivery_zone_id"] }}
+                            Delivery_zone: {{ o["address"]["delivery_zone"] }}
                             Total volume: {{ o["volume"] }}
                         </li>
                         {% endfor %}

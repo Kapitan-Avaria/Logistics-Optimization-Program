@@ -26,6 +26,7 @@ def build_routes():
         title='Построение маршрутов',
         vehicles=vw.vehicles,
         orders=vw.orders,
+        clients=vw.clients,
         folium_map=iframe,
         shift_start_b=cfg.DEFAULT_SHIFT_START_B,
         shift_start_c=cfg.DEFAULT_SHIFT_START_C,
