@@ -17,8 +17,11 @@ class CVRPTW:
     def default_distance_evaluator(self, from_node, to_node):
         return np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node])) * 1000
 
+    def travel_distance(self, from_node, to_node):
+        return float(self.calc_base_distance(from_node, to_node) / 1000)  # Converting to kilometers
+
     def time_dependent_travel_time(self, from_node, to_node, current_time):
-        base_distance = float(self.calc_base_distance(from_node, to_node) / 1000)  # Converting to kilometers
+        base_distance = self.travel_distance(from_node, to_node)  # Converting to kilometers
         base_velocity = 30  # km/h
         min_velocity = 11
 
@@ -102,10 +105,12 @@ class CVRPTW:
         return sectors
 
     def travel_cost(self, from_node, to_node, current_time):
-        travel_time = self.time_dependent_travel_time(from_node, to_node, current_time)
-        wait_time = max(self.time_windows[to_node][0] - (current_time + travel_time), 0)
-        deviation_penalty = self.deviation_penalty(from_node, to_node)
-        cost = travel_time + wait_time  # + deviation_penalty
+        travel_distance = self.travel_distance(from_node, to_node)
+        # travel_time = self.time_dependent_travel_time(from_node, to_node, current_time)
+        # wait_time = max(self.time_windows[to_node][0] - (current_time + travel_time), 0)
+        # deviation_penalty = self.deviation_penalty(from_node, to_node)
+        # cost = travel_time + wait_time  # + deviation_penalty
+        cost = travel_distance
         return cost
 
     def initial_solution(self):
