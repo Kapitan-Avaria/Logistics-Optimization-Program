@@ -117,7 +117,7 @@ class VRPWrapper:
         """
         try:
             distance_evaluator = self.create_distance_evaluator([self.addresses[i] for i in addresses_indices])
-        except Exception as e:
+        except ChildProcessError as e:
             print(e)
             distance_evaluator = None
 
@@ -307,6 +307,8 @@ class VRPWrapper:
         :param addresses: list of addresses
         :return: evaluator function
         """
+        print("Creating distance evaluator")
+
         n = len(addresses)
         distances = [[0.] * n for _ in range(n)]
         segments = [[None] * n for _ in range(n)]
@@ -337,14 +339,17 @@ class VRPWrapper:
         # Divide the points into chunks of size max_destinations
         destination_chunks = chunk_list(addresses, max_destinations)
 
-        for source_chunk in source_chunks:
-            for destination_chunk in destination_chunks:
+        for cs, source_chunk in enumerate(source_chunks):
+            for cd, destination_chunk in enumerate(destination_chunks):
+                print(f"Chunk {cs * len(destination_chunks) + cd + 1} of {len(source_chunks) * len(destination_chunks)}: {cs} -> {cd}")
                 # Check if chunk data is complete
                 is_complete = True
                 for i, source in enumerate(source_chunk):
                     source_index = addresses.index(source)
                     for j, destination in enumerate(destination_chunk):
                         destination_index = addresses.index(destination)
+                        if source["id"] == destination["id"]:
+                            continue
                         segment = get_objects(
                             class_name=Segment, address_1_id=source["id"], address_2_id=destination["id"]
                         )[0]
@@ -352,19 +357,27 @@ class VRPWrapper:
                         segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
                         if len(segment_statistics) == 0:
                             is_complete = False
+                print(f"\tChunk data is complete: {is_complete}.", end=" ")
 
                 # If not complete, request distances between the source and destination chunks from API
                 if not is_complete:
+                    print("Requesting distances from API...", end=" ")
                     sources = [[a["longitude"], a["latitude"]] for a in source_chunk]
                     destinations = [[a["longitude"], a["latitude"]] for a in destination_chunk]
                     chunk_distances, chunk_durations = rw.get_distances(sources, destinations)
+                    print("SUCCESS!")
+                else:
+                    print("All data is present in the database")
 
                 # Update the distance matrix with the calculated distances
+                print("\tUpdating distance matrix...", end=" ")
                 for i, source in enumerate(source_chunk):
                     source_index = addresses.index(source)
                     for j, destination in enumerate(destination_chunk):
                         destination_index = addresses.index(destination)
 
+                        if source["id"] == destination["id"]:
+                            continue
                         segment = segments[source_index][destination_index]
                         distances[source_index][destination_index] = calc_avg_dist(segment["id"]) if is_complete else chunk_distances[i][j]
 
@@ -379,6 +392,7 @@ class VRPWrapper:
                                 dt.weekday(),
                                 {'source': 'ors'}
                             )
+                print("SUCCESS!")
 
 
         def distance_evaluator(from_node, to_node):
