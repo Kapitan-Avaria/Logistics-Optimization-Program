@@ -13,7 +13,8 @@ class ORSRoutingClient:
         if destinations is None:
             res = distance_matrix(
                 self.client,
-                locations=sources
+                locations=sources,
+                metrics=["distance", "duration"]
             )
         else:
             destinations = [list(map(str, d)) for d in destinations]
@@ -21,6 +22,7 @@ class ORSRoutingClient:
                 self.client,
                 locations=sources+destinations,
                 sources=[i for i in range(len(sources))],
-                destinations=[i + len(sources) for i in range(len(destinations))]
+                destinations=[i + len(sources) for i in range(len(destinations))],
+                metrics=["distance", "duration"]
             )
         return res["distances"], res["durations"]
