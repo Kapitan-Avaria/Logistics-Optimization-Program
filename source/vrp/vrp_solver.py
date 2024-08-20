@@ -285,9 +285,7 @@ class CVRPTW:
         while unvisited:
             progress = False
             k += 1
-            print(k, 'LOOOOP')
             for v in range(self.vehicle_count):
-                print(v + 1)
                 # If all locations are visited, break the loop
                 if not unvisited:
                     break
@@ -322,8 +320,6 @@ class CVRPTW:
                             f"Vehicle {v + 1} added location {loc} with arrival time {new_time:.2f}, "
                             f"wait time {wait_time:.2f}, and load {new_load:.2f}")
                         break
-                print(v + 1, 'is ready for next loop')
-            print(k, "LOOOP ends")
             if not progress:
                 print("No progress made, breaking out of loop.")
                 break  # Exit if no progress is made

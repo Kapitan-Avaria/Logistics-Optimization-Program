@@ -8,6 +8,7 @@ from source.config import Config
 from datetime import datetime
 from copy import deepcopy
 import folium
+import numpy as np
 
 
 class VRPWrapper:
@@ -117,7 +118,7 @@ class VRPWrapper:
         Solves CVRPTW problem for the selected vehicles and addresses
         """
         try:
-            raise Exception("ORS-based evaluator is too slow right now and not invoked")
+            # raise Exception("ORS-based evaluator is too slow right now and not invoked")
             distance_evaluator = self.create_distance_evaluator([self.addresses[i] for i in addresses_indices])
         except Exception as e:
             print(e)
@@ -281,7 +282,9 @@ class VRPWrapper:
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
         self.unassigned_orders = [i for i in range(len(self.orders))]
 
-        insert_segments_where_lacking(100000)
+        inserted = insert_segments_where_lacking(100000)
+        if inserted:
+            self.request_statistics_from_api()
         # ***************************
         # Prepare VRP data
         self.num_orders = len(self.orders)
@@ -308,87 +311,63 @@ class VRPWrapper:
 
         print("Data loaded")
 
-    def create_distance_evaluator(self, addresses: list):
-        """
-        Calculates 'matrices' of distances and durations between all nodes in the zone.
-        :param addresses: list of addresses
-        :return: evaluator function
-        """
-        print("Creating distance evaluator")
-
-        n = len(addresses)
-        distances = [[0.] * n for _ in range(n)]
-        segments = [[None] * n for _ in range(n)]
-        max_sources = 50
-        max_destinations = 50
-        rw = RoutingWrapper()
-        dt = datetime.now()
-
+    def request_statistics_from_api(self):
         def chunk_list(lst, chunk_size):
             """Divide a list into chunks of a given size"""
             return [lst[i:i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
-        def calc_avg_dist(segment_id):
-            """Calculate average distance and duration between the two nodes of the segment"""
-            segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment_id)
-            num_records = len(segment_statistics)
+        rw = RoutingWrapper()
+        dt = datetime.now()
+        segments = get_objects(class_name=Segment)
+        sources = []
+        destinations = []
+        print('Collecting incomplete road segments:', end="")
+        for s, segment in enumerate(segments):
+            segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
+            if len(segment_statistics) == 0:
+                source = get_objects(class_name=Address, id=segment["address_1_id"])[0]
+                destination = get_objects(class_name=Address, id=segment["address_2_id"])[0]
+                if source not in sources:
+                    sources.append(source)
+                if destination not in destinations:
+                    destinations.append(destination)
+            if s % 1000 == 0:
+                print(f"\rCollecting incomplete road segments: {s / len(segments) * 100:.0f}%", end='', flush=True)
+        print('\rCollecting incomplete road segments: 100%', flush=True)
 
-            sum_dist = 0
-            sum_time = 0
-            for record in range(num_records):
-                sum_dist += segment_statistics[record]["distance"]
-                sum_time += segment_statistics[record]["duration"]
-            avg_dist = sum_dist / num_records
-            return avg_dist
+        if len(sources) == 0 or len(destinations) == 0:
+            print("All segments are complete")
+            return
+
+        print("Some segments are have missing distance data, requesting from API...")
 
         # Divide the points into chunks of size max_sources
-        source_chunks = chunk_list(addresses, max_sources)
+        source_chunks = chunk_list(sources, 50)
         # Divide the points into chunks of size max_destinations
-        destination_chunks = chunk_list(addresses, max_destinations)
+        destination_chunks = chunk_list(destinations, 50)
 
         for cs, source_chunk in enumerate(source_chunks):
             for cd, destination_chunk in enumerate(destination_chunks):
-                print(f"Chunk {cs * len(destination_chunks) + cd + 1} of {len(source_chunks) * len(destination_chunks)}: {cs} -> {cd}")
-                # Check if chunk data is complete
-                is_complete = True
+                print(
+                    f"Chunk {cs * len(destination_chunks) + cd + 1} of {len(source_chunks) * len(destination_chunks)}"
+                )
+                print('\tRequesting distances from API...', end=' ')
+                chunk_sources_coords = [[a["longitude"], a["latitude"]] for a in source_chunk]
+                chunk_destinations_coords = [[a["longitude"], a["latitude"]] for a in destination_chunk]
+                chunk_distances, chunk_durations = rw.get_distances(chunk_sources_coords, chunk_destinations_coords)
+                print('SUCCESS!')
+
+                print('\tInserting into database...', end=' ')
                 for i, source in enumerate(source_chunk):
-                    source_index = addresses.index(source)
                     for j, destination in enumerate(destination_chunk):
-                        destination_index = addresses.index(destination)
                         if source["id"] == destination["id"]:
                             continue
+                        
                         segment = get_objects(
                             class_name=Segment, address_1_id=source["id"], address_2_id=destination["id"]
                         )[0]
-                        segments[source_index][destination_index] = segment
                         segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
-                        if len(segment_statistics) == 0:
-                            is_complete = False
-                print(f"\tChunk data is complete: {is_complete}.", end=" ")
-
-                # If not complete, request distances between the source and destination chunks from API
-                if not is_complete:
-                    print("Requesting distances from API...", end=" ")
-                    sources = [[a["longitude"], a["latitude"]] for a in source_chunk]
-                    destinations = [[a["longitude"], a["latitude"]] for a in destination_chunk]
-                    chunk_distances, chunk_durations = rw.get_distances(sources, destinations)
-                    print("SUCCESS!")
-                else:
-                    print("All data is present in the database")
-
-                # Update the distance matrix with the calculated distances
-                print("\tUpdating distance matrix...", end=" ")
-                for i, source in enumerate(source_chunk):
-                    source_index = addresses.index(source)
-                    for j, destination in enumerate(destination_chunk):
-                        destination_index = addresses.index(destination)
-
-                        if source["id"] == destination["id"]:
-                            continue
-                        segment = segments[source_index][destination_index]
-                        distances[source_index][destination_index] = calc_avg_dist(segment["id"]) if is_complete else chunk_distances[i][j]
-
-                        segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])
+                        
                         if len(segment_statistics) == 0:
                             insert_segment_statistics(
                                 segment["id"],
@@ -399,12 +378,15 @@ class VRPWrapper:
                                 dt.weekday(),
                                 {'source': 'ors'}
                             )
-                print("SUCCESS!")
+                print('SUCCESS!')
 
-
+    def create_distance_evaluator(self, addresses: list[dict]):
         def distance_evaluator(from_node, to_node):
-            nonlocal distances
-            return distances[from_node][to_node]
+            nonlocal addresses
+            segment = get_objects(
+                class_name=Segment, address_1_id=addresses[from_node]["id"], address_2_id=addresses[to_node]["id"]
+            )[0]
+            segment_statistics = get_objects(class_name=SegmentStatistics, segment_id=segment["id"])[0]
+            return segment_statistics["distance"]
 
         return distance_evaluator
-

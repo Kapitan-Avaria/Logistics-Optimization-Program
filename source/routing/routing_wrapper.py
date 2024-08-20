@@ -13,9 +13,9 @@ class RoutingWrapper:
         config = Config()
         self.clients = {
             'ors-api': ORSRoutingClient(config.ORS_ROUTING_API_KEY),
-            'yandex-api': YandexRoutingClient(config.YANDEX_ROUTING_API_KEY),
-            'yandex-selenium': YandexInBrowserRouter(),
-            'yandex-manual': YandexManualRoutingHelper()
+            # 'yandex-api': YandexRoutingClient(config.YANDEX_ROUTING_API_KEY),
+            # 'yandex-selenium': YandexInBrowserRouter(),
+            # 'yandex-manual': YandexManualRoutingHelper()
         }
 
     def get_distances(self, sources, destinations=None, time_sleep_seconds=1):
