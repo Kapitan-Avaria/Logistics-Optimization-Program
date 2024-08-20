@@ -198,19 +198,33 @@ class CVRPTW:
 
     def construct_routes(self, solver="greedy2"):
         if solver == "greedy":
-            routes = self.construct_routes_greedy()
+            routes = self.construct_routes_greedy(False)
         elif solver == "greedy2":
-            routes = self.construct_routes_greedy2()
+            routes = self.construct_routes_greedy(True)
         else:
             raise ValueError("Invalid solver specified.")
-        routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
+        # routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
         return routes
 
-    def construct_routes_greedy(self):
+    def select_feasible_locations(self, unvisited, vehicle_loads, v, sectors=False):
+        feasible_locations = [
+            loc for loc in unvisited
+            if vehicle_loads[v] + sum(
+                self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
+               self.vehicle_capacities[v] and (loc in sectors[v] if sectors else True)
+        ]
+        return feasible_locations
+
+    def construct_routes_greedy(self, use_predistributed_sectors=True):
         routes = self.initial_solution()
         unvisited = set(range(1, len(self.locations)))
         vehicle_loads = [0] * self.vehicle_count
         vehicle_times = [0] * self.vehicle_count
+
+        if use_predistributed_sectors:
+            sectors = self.predistribute_sectors()
+        else:
+            sectors = False
 
         while unvisited:
             progress = False
@@ -220,63 +234,7 @@ class CVRPTW:
                     break
 
                 # Select the locations to which the vehicle can deliver all demanded products
-                feasible_locations = [
-                    loc for loc in unvisited
-                    if vehicle_loads[v] + sum(
-                        self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
-                       self.vehicle_capacities[v]
-                ]
-                # Sort feasible locations by travel cost from current point
-                feasible_locations.sort(
-                    key=lambda loc: self.travel_cost(routes[v][-1][0], loc, vehicle_times[v]) if routes[v]
-                    else self.travel_cost(0, loc, vehicle_times[v])
-                )
-
-                # Try to add the closest feasible location to the vehicle route
-                for loc in feasible_locations:
-                    current_time = vehicle_times[v]
-                    vehicle_load = vehicle_loads[v]
-                    new_time, new_load, wait_time, success = self.try_add_to_route(routes[v], loc, current_time,
-                                                                                   vehicle_load, self.vehicle_capacities[v])
-                    if success:
-                        routes[v].append((loc, new_time, new_load, wait_time))
-                        vehicle_times[v] = new_time
-                        vehicle_loads[v] = new_load
-                        unvisited.remove(loc)
-                        progress = True
-                        print(
-                            f"Vehicle {v + 1} added location {loc} with arrival time {new_time:.2f}, "
-                            f"wait time {wait_time:.2f}, and load {new_load:.2f}")
-                        break
-
-            if not progress:
-                print("No progress made, breaking out of loop.")
-                break  # Exit if no progress is made
-
-        return routes
-
-    def construct_routes_greedy2(self):
-        routes = self.initial_solution()
-        unvisited = set(range(1, len(self.locations)))
-        vehicle_loads = [0] * self.vehicle_count
-        vehicle_times = [0] * self.vehicle_count
-
-        sectors = self.predistribute_sectors()
-
-        while unvisited:
-            progress = False
-            for v in range(self.vehicle_count):
-                # If all locations are visited, break the loop
-                if not unvisited:
-                    break
-
-                # Select the locations to which the vehicle can deliver all demanded products
-                feasible_locations = [
-                    loc for loc in unvisited
-                    if vehicle_loads[v] + sum(
-                        self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
-                       self.vehicle_capacities[v] and loc in sectors[v]
-                ]
+                feasible_locations = self.select_feasible_locations(unvisited, vehicle_loads, v, sectors)
                 # Sort feasible locations by travel cost from current point
                 feasible_locations.sort(
                     key=lambda loc: self.travel_cost(routes[v][-1][0], loc, vehicle_times[v]) if routes[v]
