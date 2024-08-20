@@ -5,7 +5,7 @@ import folium
 
 
 class CVRPTW:
-    def __init__(self, locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator=None):
+    def __init__(self, locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator=None, loc_clusters=None):
         self.locations = locations
         self.demands = demands
         self.product_volumes = product_volumes
@@ -13,6 +13,7 @@ class CVRPTW:
         self.vehicle_capacities = vehicle_capacities
         self.vehicle_count = len(vehicle_capacities)
         self.calc_base_distance = self.default_distance_evaluator if distance_evaluator is None else distance_evaluator
+        self.loc_clusters = loc_clusters
 
     def default_distance_evaluator(self, from_node, to_node):
         return np.linalg.norm(np.array(self.locations[from_node]) - np.array(self.locations[to_node])) * 1000
@@ -45,19 +46,6 @@ class CVRPTW:
         dynamic_time = loc_quantity * 30 / 3600  # 30 seconds per product
 
         return travel_time + static_time + dynamic_time
-
-    def deviation_penalty(self, from_node, to_node):
-        # Penal the vehicle if it's angular jumping to far away from the current location
-        loc0 = self.locations[0]
-        loc1 = self.locations[from_node]
-        loc2 = self.locations[to_node]
-        angle1 = np.arctan2(float(loc2[1] - loc0[1]), float(loc2[0] - loc0[0]))
-        angle2 = np.arctan2(float(loc1[1] - loc0[1]), float(loc1[0] - loc0[0]))
-        angle = abs(angle2 - angle1) % np.pi
-        if angle > np.pi / 8:
-            return (angle - np.pi / 8) / (np.pi - np.pi / 8) * 5
-        else:
-            return 0
 
     def predistribute_sectors(self):
 
@@ -108,7 +96,6 @@ class CVRPTW:
         travel_distance = self.travel_distance(from_node, to_node)
         # travel_time = self.time_dependent_travel_time(from_node, to_node, current_time)
         # wait_time = max(self.time_windows[to_node][0] - (current_time + travel_time), 0)
-        # deviation_penalty = self.deviation_penalty(from_node, to_node)
         # cost = travel_time + wait_time  # + deviation_penalty
         cost = travel_distance
         return cost
@@ -196,22 +183,32 @@ class CVRPTW:
         # route.append((location, current_time, vehicle_load, wait_time))
         return current_time, vehicle_load, wait_time, True
 
-    def construct_routes(self, solver="greedy2"):
+    def construct_routes(self, solver="clustered"):
         if solver == "greedy":
             routes = self.construct_routes_greedy(False)
         elif solver == "greedy2":
             routes = self.construct_routes_greedy(True)
+        elif solver == "clustered":
+            if self.loc_clusters is None:
+                raise ValueError("Clustered solver requires loc_clusters to be provided.")
+            routes = self.construct_routes_clustered()
         else:
             raise ValueError("Invalid solver specified.")
         # routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
         return routes
 
-    def select_feasible_locations(self, unvisited, vehicle_loads, v, sectors=False):
+    def select_feasible_locations(self, unvisited, vehicle_loads, v, subsets=None):
+        if subsets is not None:
+            other_subsets = [s for i, s in enumerate(subsets) if i != v]
+            forbidden_locations = [loc for subset in other_subsets for loc in subset]
+        else:
+            forbidden_locations = []
+
         feasible_locations = [
             loc for loc in unvisited
             if vehicle_loads[v] + sum(
                 self.demands[loc][product] * self.product_volumes[product] for product in self.demands[loc]) <=
-               self.vehicle_capacities[v] and (loc in sectors[v] if sectors else True)
+               self.vehicle_capacities[v] and (loc in subsets[v] if subsets[v] else True) and (loc not in forbidden_locations)
         ]
         return feasible_locations
 
@@ -224,7 +221,9 @@ class CVRPTW:
         if use_predistributed_sectors:
             sectors = self.predistribute_sectors()
         else:
-            sectors = False
+            sectors = []
+            for v in range(self.vehicle_count):
+                sectors.append(set())
 
         while unvisited:
             progress = False
@@ -265,6 +264,72 @@ class CVRPTW:
 
         return routes
 
+    def construct_routes_clustered(self):
+        routes = self.initial_solution()
+        unvisited = set(range(1, len(self.locations)))
+        vehicle_loads = [0] * self.vehicle_count
+        vehicle_times = [0] * self.vehicle_count
+
+        subsets: list[set[int]] = []
+        for v in range(self.vehicle_count):
+            subsets.append(set())
+
+        def select_from_same_cluster(loc):
+            cluster = set()
+            for loc2 in unvisited:
+                if self.loc_clusters[loc2] == self.loc_clusters[loc]:
+                    cluster.add(loc2)
+            return cluster
+
+        k = -1
+        while unvisited:
+            progress = False
+            k += 1
+            print(k, 'LOOOOP')
+            for v in range(self.vehicle_count):
+                print(v + 1)
+                # If all locations are visited, break the loop
+                if not unvisited:
+                    break
+
+                # Select the locations to which the vehicle can deliver all demanded products
+                feasible_locations = self.select_feasible_locations(unvisited, vehicle_loads, v, subsets)
+                # Sort feasible locations by travel cost from current point
+                feasible_locations.sort(
+                    key=lambda loc: self.travel_cost(routes[v][-1][0], loc, vehicle_times[v]) if routes[v]
+                    else self.travel_cost(0, loc, vehicle_times[v])
+                )
+
+                # Try to add the closest feasible location to the vehicle route
+                for loc in feasible_locations:
+                    current_time = vehicle_times[v]
+                    vehicle_load = vehicle_loads[v]
+                    new_time, new_load, wait_time, success = self.try_add_to_route(routes[v], loc, current_time,
+                                                                                   vehicle_load,
+                                                                                   self.vehicle_capacities[v])
+                    if success:
+                        routes[v].append((loc, new_time, new_load, wait_time))
+                        vehicle_times[v] = new_time
+                        vehicle_loads[v] = new_load
+
+                        if not subsets[v]:
+                            subsets[v] = select_from_same_cluster(loc)
+                        unvisited.remove(loc)
+                        subsets[v].remove(loc)
+
+                        progress = True
+                        print(
+                            f"Vehicle {v + 1} added location {loc} with arrival time {new_time:.2f}, "
+                            f"wait time {wait_time:.2f}, and load {new_load:.2f}")
+                        break
+                print(v + 1, 'is ready for next loop')
+            print(k, "LOOOP ends")
+            if not progress:
+                print("No progress made, breaking out of loop.")
+                break  # Exit if no progress is made
+
+        return routes
+
     def print_routes(self, routes):
         for v, route in enumerate(routes):
             print(f"\nVehicle {v + 1}. Capacity: {self.vehicle_capacities[v]}. Route:")
@@ -287,7 +352,6 @@ class CVRPTW:
         m.show_in_browser()
 
 
-
 if __name__ == "__main__":
     # Generate Example Data
     random.seed(42)
@@ -307,4 +371,4 @@ if __name__ == "__main__":
 
     draw = True
     if draw:
-        cvrptw.draw_routes()
+        cvrptw.draw_routes(locations, routes)

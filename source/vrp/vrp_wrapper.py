@@ -129,7 +129,8 @@ class VRPWrapper:
             self.product_volumes,
             [self.time_windows[a] for a in addresses_indices],
             [self.vehicle_capacities[v] for v in vehicles_indices],
-            distance_evaluator
+            distance_evaluator,
+            [self.addresses[a]["delivery_zone_id"] for a in addresses_indices]
         )
         routes = cvrptw.construct_routes()
         cvrptw.print_routes(routes)
