@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <button name="edit_config" value="" form="edit_config_form">Сохранить</button>
+    <form action="/edit_config" id="edit_config_form" method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for k, v in cfg.items() %}
+                <tr>
+                    <td>{{ k }}</td>
+                    <td>
+                    {% if v is string %}
+                        <input type="text" name="{{ k }}" value="{{ v }}">
+                    {% elif v is integer %}
+                        <input type="number" name="{{ k }}" value="{{ v }}">
+                    {% elif v is float %}
+                        <input type="number" step="0.01" name="{{ k }}" value="{{ v }}">
+                    {% elif v is boolean %}
+                        <input type="checkbox" name="{{ k }}" {{ 'checked' if v else ''}}>
+                    {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</main>
+{% endblock %}

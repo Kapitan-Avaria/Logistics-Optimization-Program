@@ -36,6 +36,36 @@ def index():
     )
 
 
+@app.route('/edit_config', methods=['GET', 'POST'])
+def edit_config():
+    if request.method == 'GET':
+        return render_template(
+            "edit_config.html",
+            title='Настроить конфигурацию',
+            cfg=cfg.load_dict()
+        )
+    elif request.method == 'POST':
+        cfg_dict = cfg.load_dict()
+        for k, v in cfg_dict.items():
+            # if type(cfg.__getattr__(k)) is bool:
+            #     v = True if v == 'on' else False
+            #     print(k, v)
+            if type(v) is bool:
+                new_v = False
+                if request.form.get(k):
+                    new_v = True
+            elif type(v) is str:
+                new_v = request.form.get(k)
+            elif type(v) is float:
+                new_v = float(request.form.get(k))
+            else:
+                new_v = request.form.get(k)
+            if new_v is None:
+                continue
+            cfg.__setattr__(k, new_v)
+        return redirect(request.referrer)
+
+
 @app.route('/edit_orders')
 def edit_orders():
     return render_template(

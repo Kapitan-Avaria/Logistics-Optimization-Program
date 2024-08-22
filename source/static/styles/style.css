@@ -9,6 +9,11 @@
     width: 50%;
 }
 
+.menu {
+    padding-bottom: 8px;
+    border-bottom: 1px solid grey;
+}
+
 .menu a {
     padding-left: 8px;
     padding-right: 8px;

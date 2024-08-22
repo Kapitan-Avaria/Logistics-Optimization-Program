@@ -27,14 +27,17 @@ class Config:
                 return
             config[key] = value
             f.seek(0)
-            new_config = json.dumps(config, indent=2)
+            new_config = json.dumps(config, ensure_ascii=False, indent=2)
             f.write(new_config)
             f.truncate()
 
     def __getattr__(self, item):
+        config = self.load_dict()
+        if item not in config.keys():
+            raise AttributeError(f"Config has no attribute '{item}'")
+        return config[item]
+
+    def load_dict(self):
         with open(self.path / "config.cfg", 'r', encoding='utf8') as f:
             config = json.load(f)
-            if item not in config.keys():
-                raise AttributeError(f"Config has no attribute '{item}'")
-            return config[item]
-
+            return config
