@@ -12,13 +12,13 @@ class RoutingWrapper:
     def __init__(self):
         config = Config()
         self.clients = {
-            'ors-api': ORSRoutingClient(config.ORS_ROUTING_API_KEY),
-            # 'yandex-api': YandexRoutingClient(config.YANDEX_ROUTING_API_KEY),
-            # 'yandex-selenium': YandexInBrowserRouter(),
-            # 'yandex-manual': YandexManualRoutingHelper()
+            'ors_api': ORSRoutingClient(config.ORS_ROUTING_API_KEY),
+            # 'yandex_api': YandexRoutingClient(config.YANDEX_ROUTING_API_KEY),
+            # 'yandex_selenium': YandexInBrowserRouter(),
+            # 'yandex_manual': YandexManualRoutingHelper()
         }
 
     def get_distances(self, sources, destinations=None, time_sleep_seconds=1):
-        res = self.clients['ors-api'].get_distances(sources, destinations)
+        res = self.clients['ors_api'].get_distances(sources, destinations)
         sleep(time_sleep_seconds)
         return res

@@ -1,7 +1,7 @@
 *__pycache__
 .venv
 .idea
-database.db
+database*.db
 00 data_templates
 00 drafts
 /source/config.cfg
