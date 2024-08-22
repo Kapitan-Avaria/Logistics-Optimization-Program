@@ -16,7 +16,7 @@ def generate_example_products():
     for p in range(10):
         product = {
             "name": f"Product {p}",
-            "form-factor": "tire",
+            "form_factor": "tire",
             "dimensions": [random.randint(180, 210), random.randint(45, 70), random.randint(14, 20)],
         }
         products_data["products"].append(product)
@@ -30,7 +30,7 @@ def generate_example_vehicles():
             "name": f"Vehicle {v}",
             "category": random.choice(["B", "C"]),
             "dimensions": [random.randint(2, 10), random.randint(2, 4), random.randint(2, 4)],
-            "weight-capacity": random.randint(100, 1000),
+            "weight_capacity": random.randint(100, 1000),
         }
         vehicles_data["vehicles"].append(vehicle)
     return vehicles_data
@@ -43,16 +43,16 @@ def generate_example_orders():
         order = {
             "number": f"Order {o}",
             "date": f"2023-05-{random.randint(1, 30)}",
-            "delivery-time-start": f"{time_start}:{random.randint(0, 59)}",
-            "delivery-time-end": f"{max(random.randint(14, 23), time_start + 1)}:{random.randint(0, 59)}",
+            "delivery_time_start": f"{time_start}:{random.randint(0, 59)}",
+            "delivery_time_end": f"{max(random.randint(14, 23), time_start + 1)}:{random.randint(0, 59)}",
             "client": f"Client {random.randint(1, 100)}",
             "address": addresses[o],
             "comment": "",
-            "geo-location": {
+            "geo_location": {
                 "latitude": geo_locations[o][0],
                 "longitude": geo_locations[o][1]
             },
-            "delivery-zone": delivery_zones[o],
+            "delivery_zone": delivery_zones[o],
             "type": "B" if delivery_zones[o] in ["Краснодар", "Динская"] else "C",
             "products": [
                 {"name": f"Product {p}", "quantity": random.randint(2, 20)}
@@ -75,11 +75,11 @@ if __name__ == "__main__":
     orders = generate_example_orders()
     depot_address = {
         "address": addresses[-1],
-        "geo-location": {
+        "geo_location": {
             "latitude": geo_locations[-1][0],
             "longitude": geo_locations[-1][1]
         },
-        "delivery-zone": None
+        "delivery_zone": None
     }
 
     upsert_products(products["products"])
