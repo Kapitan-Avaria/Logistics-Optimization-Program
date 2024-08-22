@@ -40,7 +40,7 @@ class VRPWrapper:
         self.time_windows = []
         self.vehicle_capacities = []
 
-    def run(self, vehicles_ids, orders_ids, category_matters=False):
+    def run(self, vehicles_ids, orders_ids, category_matters=True):
         def vehicle_index_from_vehicle_id(v_id):
             for i in range(len(self.vehicles)):
                 if self.vehicles[i]["id"] == v_id:
@@ -57,14 +57,15 @@ class VRPWrapper:
             converted_routes = []
             for route in routes:
                 converted_route = []
-                for i, point in enumerate(route):
-                    converted_route.append({
-                        # 'order': self.orders[locations_indices[point[0]]],
-                        'address': self.addresses[locations_indices[point[0]]],
-                        'arrival_time': point[1],
-                        'load': point[2],
-                        'wait_time': point[3]
-                    })
+                if len(route) > 0:
+                    for i, point in enumerate(route):
+                        converted_route.append({
+                            # 'order': self.orders[locations_indices[point[0]]],
+                            'address': self.addresses[locations_indices[point[0]]],
+                            'arrival_time': point[1],
+                            'load': point[2],
+                            'wait_time': point[3]
+                        })
                 converted_routes.append(converted_route)
             return converted_routes
 
@@ -93,13 +94,12 @@ class VRPWrapper:
                     addresses_indices_c.append(i + 1)
 
             routes_b = self.build_routes(vehicles_indices_b, addresses_indices_b)
-            routes_c = self.build_routes(vehicles_indices_c, addresses_indices_c)
-            routes = routes_b + routes_c
+            routes_c = self.build_routes(vehicles_indices_c, addresses_indices_c, start_from_farthest=True)
 
-            for v in vehicles_indices_b:
-                self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_b)[0])
-            for v in vehicles_indices_c:
-                self.vehicles[v]["routes"].append(convert_routes([routes[v]], addresses_indices_c)[0])
+            for i, v in enumerate(vehicles_indices_b):
+                self.vehicles[v]["routes"].append(convert_routes([routes_b[i]], addresses_indices_b)[0])
+            for i, v in enumerate(vehicles_indices_c):
+                self.vehicles[v]["routes"].append(convert_routes([routes_c[i]], addresses_indices_c)[0])
         else:
             vehicles_indices = [vehicle_index_from_vehicle_id(v_id) for v_id in vehicles_ids]
             addresses_indices = [order_index_from_order_id(o_id) + 1 for o_id in orders_ids]
@@ -116,7 +116,7 @@ class VRPWrapper:
             loc_volume += quantity * self.product_volumes[product]
         return loc_volume
 
-    def build_routes(self, vehicles_indices, addresses_indices):
+    def build_routes(self, vehicles_indices, addresses_indices, start_from_farthest=False):
         """
         Solves CVRPTW problem for the selected vehicles and addresses
         """
@@ -136,7 +136,7 @@ class VRPWrapper:
             distance_evaluator,
             [self.addresses[a]["delivery_zone_id"] for a in addresses_indices]
         )
-        routes = cvrptw.construct_routes()
+        routes = cvrptw.construct_routes(start_from_farthest=start_from_farthest)
         cvrptw.print_routes(routes)
         return routes
 

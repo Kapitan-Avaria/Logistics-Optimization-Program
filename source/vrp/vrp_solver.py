@@ -5,7 +5,16 @@ import folium
 
 
 class CVRPTW:
-    def __init__(self, locations, demands, product_volumes, time_windows, vehicle_capacities, distance_evaluator=None, loc_clusters=None):
+    def __init__(
+            self,
+            locations,
+            demands,
+            product_volumes,
+            time_windows,
+            vehicle_capacities,
+            distance_evaluator=None,
+            loc_clusters=None
+    ):
         self.locations = locations
         self.demands = demands
         self.product_volumes = product_volumes
@@ -183,15 +192,15 @@ class CVRPTW:
         # route.append((location, current_time, vehicle_load, wait_time))
         return current_time, vehicle_load, wait_time, True
 
-    def construct_routes(self, solver="clustered"):
+    def construct_routes(self, solver="clustered", start_from_farthest=False):
         if solver == "greedy":
-            routes = self.construct_routes_greedy(False)
+            routes = self.construct_routes_greedy(use_predistributed_sectors=False)
         elif solver == "greedy2":
-            routes = self.construct_routes_greedy(True)
+            routes = self.construct_routes_greedy(use_predistributed_sectors=True)
         elif solver == "clustered":
             if self.loc_clusters is None:
                 raise ValueError("Clustered solver requires loc_clusters to be provided.")
-            routes = self.construct_routes_clustered()
+            routes = self.construct_routes_clustered(start_from_farthest=start_from_farthest)
         else:
             raise ValueError("Invalid solver specified.")
         # routes = [self.improve_route(route) if len(route) > 0 else route for route in routes]
@@ -264,7 +273,7 @@ class CVRPTW:
 
         return routes
 
-    def construct_routes_clustered(self):
+    def construct_routes_clustered(self, start_from_farthest=False):
         routes = self.initial_solution()
         unvisited = set(range(1, len(self.locations)))
         vehicle_loads = [0] * self.vehicle_count
@@ -281,7 +290,7 @@ class CVRPTW:
                     cluster.add(loc2)
             return cluster
 
-        k = -1
+        k = 0
         while unvisited:
             progress = False
             k += 1
@@ -295,7 +304,8 @@ class CVRPTW:
                 # Sort feasible locations by travel cost from current point
                 feasible_locations.sort(
                     key=lambda loc: self.travel_cost(routes[v][-1][0], loc, vehicle_times[v]) if routes[v]
-                    else self.travel_cost(0, loc, vehicle_times[v])
+                    else self.travel_cost(0, loc, vehicle_times[v]),
+                    reverse=True if (start_from_farthest and k == 1) else False
                 )
 
                 # Try to add the closest feasible location to the vehicle route
