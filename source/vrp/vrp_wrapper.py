@@ -14,17 +14,20 @@ import numpy as np
 class VRPWrapper:
 
     def __init__(self):
+        self.status_1c = None
+
         self.orders = []
         self.products = dict()
         self.available_vehicles = []
         self.vehicles = []
         self.depot_address = dict()
         self.clients = dict()
+        self.delivery_zones = dict()
 
         self.unassigned_vehicles = []
         self.unassigned_orders = []
         self.approved_routes = []
-        self.actual_volume_ratio = 0.8  # A coefficient to diminish volume of the vehicle
+        self.actual_volume_ratio = Config().ACTUAL_VOLUME_RATIO  # A coefficient to diminish volume of the vehicle
         self.request_coords_on_load = True
         self.map = folium.Map()
 
@@ -204,6 +207,9 @@ class VRPWrapper:
         Loads the necessary data from 1C
         """
         client = HTTPClient1C(url_1c)
+        self.status_1c = client.is_available()
+        if not self.status_1c:
+            return
 
         # Load historical and utility data from 1C if database was created for the first time
         all_products = client.get_all_products()
@@ -251,6 +257,7 @@ class VRPWrapper:
                 address = self.reload_address_if_not_geocoded(address)
 
             delivery_zone = get_objects(class_name=DeliveryZone, id=address["delivery_zone_id"])[0]
+            self.delivery_zones[address["delivery_zone_id"]] = delivery_zone
             address["delivery_zone"] = delivery_zone["name"]
             address["delivery_zone_type"] = delivery_zone["type"]
             self.clients[client["id"]] = client
@@ -271,7 +278,12 @@ class VRPWrapper:
             vehicle["routes"] = []
             self.vehicles.append(vehicle)
 
-        random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])[0]
+        try:
+            random_zone = get_objects(class_name=DeliveryZone, id=self.orders[0]["address"]["delivery_zone_id"])[0]
+        except IndexError:
+            print("[WARN]: No orders in the database")
+            return
+
         try:
             self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
         except IndexError:
@@ -285,6 +297,7 @@ class VRPWrapper:
         inserted = insert_segments_where_lacking(100000)
         if inserted:
             self.request_statistics_from_api()
+
         # ***************************
         # Prepare VRP data
         self.num_orders = len(self.orders)

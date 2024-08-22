@@ -16,6 +16,14 @@ class HTTPClient1C:
                 return {}
         return wrapper
 
+    def is_available(self):
+        try:
+            requests.get(self.url)
+            return True
+        except requests.exceptions.ConnectionError:
+            print(f"Connection error: Can't connect to 1C HTTP-service")
+            return False
+
     @safe_request
     def get_archived_orders(self):
         return requests.get(self.url + 'orders/get_archived_orders').json()["orders"]

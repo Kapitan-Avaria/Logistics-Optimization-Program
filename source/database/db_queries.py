@@ -22,11 +22,11 @@ def upsert_orders(orders: list[dict], session: Session):
     for order in orders:
         existing_order: Order = select_existing_object(session, Order, number=order["number"])
 
-        if existing_order.date is None:
+        if "date" in order.keys():
             date = datetime.strptime(order["date"], "%Y-%m-%d")
             existing_order.date = date
 
-        if existing_order.client_id is None:
+        if "client" in order.keys():
             client: Client = select_existing_object(session, Client, name=order["client"])
             existing_order.client_id = client.id
 
@@ -34,17 +34,17 @@ def upsert_orders(orders: list[dict], session: Session):
             address = insert_address_from_order(order, session)
             existing_order.address_id = address.id
 
-        if existing_order.delivery_time_start is None and order["delivery-time-start"]:
-            start_time = datetime.strptime(order["delivery-time-start"], "%H:%M").time()
+        if "delivery_time_start" in order.keys():
+            start_time = datetime.strptime(order["delivery_time_start"][:5], "%H:%M").time()
             existing_order.delivery_time_start = start_time
-        if existing_order.delivery_time_end is None and order["delivery-time-end"]:
-            end_time = datetime.strptime(order["delivery-time-end"], "%H:%M").time()
+        if "delivery_time_end" in order.keys():
+            end_time = datetime.strptime(order["delivery_time_end"][:5], "%H:%M").time()
             existing_order.delivery_time_end = end_time
 
-        if existing_order.comment is None and order["comment"]:
+        if "comment" in order.keys():
             existing_order.comment = order["comment"]
 
-        if existing_order.status is None and order["status"] is not None:
+        if "status" in order.keys():
             existing_order.status = order["status"]
 
         if "products" in order.keys():
@@ -61,17 +61,16 @@ def upsert_orders(orders: list[dict], session: Session):
 
 def insert_address_from_dict(d: dict, session: Session):
     address = select_existing_object(session, Address, string_address=d["address"])
-    if address.latitude is None or address.longitude is None:
-        if d["geo-location"]:
-            address.longitude = Decimal(d["geo-location"]["longitude"])
-            address.latitude = Decimal(d["geo-location"]["latitude"])
-    if address.delivery_zone_id is None and d["delivery-zone"]:
-        delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=d["delivery-zone"])
+    if "geo_location" in d.keys() and d["geo_location"]:
+        address.longitude = Decimal(d["geo_location"]["longitude"])
+        address.latitude = Decimal(d["geo_location"]["latitude"])
+    if "delivery_zone" in d.keys():
+        delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=d["delivery_zone"])
         address.delivery_zone_id = delivery_zone.id
-        if delivery_zone.depot_id is None and d["depot_address"]:
+        if "depot_address" in d.keys():
             depot_address: Address = select_existing_object(session, Address, string_address=d["depot_address"])
             delivery_zone.depot_id = depot_address.id
-        if delivery_zone.type is None and d["type"]:
+        if "type" in d.keys():
             delivery_zone.type = d["type"]
     return address
 
@@ -86,6 +85,14 @@ def insert_addresses(addresses: list, session: Session):
 def insert_address_from_order(order, session: Session):
     address = insert_address_from_dict(order, session)
     return address
+
+
+@use_with_session
+def upsert_delivery_zones(delivery_zones: list[dict], session: Session):
+    for dz in delivery_zones:
+        existing_delivery_zone: DeliveryZone = select_existing_object(session, DeliveryZone, name=dz["name"])
+        if existing_delivery_zone.type is None and dz["type"]:
+            existing_delivery_zone.type = dz["type"]
 
 
 @use_with_session
@@ -149,8 +156,8 @@ def upsert_vehicles(vehicles: list[dict], session: Session):
             volume = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
             existing_vehicle.dimensions = {"inner": vehicle["dimensions"], "volume": volume}
 
-        if existing_vehicle.weight_capacity is None and vehicle["weight-capacity"]:
-            existing_vehicle.weight_capacity = vehicle["weight-capacity"]
+        if existing_vehicle.weight_capacity is None and vehicle["weight_capacity"]:
+            existing_vehicle.weight_capacity = vehicle["weight_capacity"]
 
 
 @use_with_session
@@ -170,11 +177,11 @@ def upsert_products(products: list[dict], session: Session):
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
 
         if existing_product.form_factor is None:
-            form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form-factor"])
+            form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form_factor"])
             existing_product.form_factor = form_factor.id
         if existing_product.dimensions is None and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
-        if product["form-factor"] == 'tire':
+        if product["form_factor"] == 'tire':
             dims = tire_dims_to_external_mm(product["dimensions"])
             volume = dims[0] * dims[1] * dims[2]
             existing_product.volume = volume
