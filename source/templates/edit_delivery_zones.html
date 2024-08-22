@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <button name="update_delivery_zones" value="" form="update_delivery_zones_form">Сохранить</button>
+    <a href="/edit_vehicles">
+        <button name="edit_vehicles">Перейти к настройке транспортных средств -></button>
+    </a>
+    <form action="/update_delivery_zones" id="update_delivery_zones_form" method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Обслуживающий склад</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in delivery_zones %}
+                <tr>
+                    <td><input type="hidden" name="name_{{d['id']}}" value="{{ d['name'] }}">{{ d["name"] }}</td>
+                    <td><select name="type_{{d['id']}}" id="type_{{d['id']}}">
+                        <option value="C" {{ "selected" if d["type"] == "C" or not d["type"] }}>C</option>
+                        <option value="B" {{ "selected" if d["type"] == "B" }}>B</option>
+                    </select></td>
+                    <td>{{ depot_address }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</main>
+{% endblock %}

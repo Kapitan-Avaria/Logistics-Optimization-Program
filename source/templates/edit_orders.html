@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <button name="update_orders" value="" form="update_orders_form">Сохранить</button>
+    <a href="/edit_delivery_zones">
+        <button name="edit_delivery_zones">Перейти к настройке зон доставки -></button>
+    </a>
+    <form action="/update_orders" id="update_orders_form" method="post">
+        <table>
+            <thead>
+                <tr>
+                    <th>Номер заказа</th>
+                    <th>Клиент</th>
+                    <th>Адрес</th>
+                    <th>Зона доставки</th>
+                    <th>Широта</th>
+                    <th>Долгота</th>
+                    <th>Дата</th>
+                    <th>Время: начало</th>
+                    <th>Время: конец</th>
+                    <th>Комментарий</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for o in orders %}
+                <tr>
+                    <td><input type="hidden" name="number_{{o['id']}}" value="{{ o['number'] }}">{{ o["number"] }}</td>
+                    <td>{{ clients[o["client_id"]]["name"] }}</td>
+                    <td><input type="text" name="address_{{o['id']}}" id="address_{{o['id']}}" value="{{ o['address']['string_address'] }}"></td>
+                    <td><input type="text" name="delivery_zone_{{o['id']}}" id="delivery_zone_{{o['id']}}" value="{{ o['address']['delivery_zone'] }}"></td>
+                    <td><input type="number" name="latitude_{{o['id']}}" id="latitude_{{o['id']}}" step="0.000001" min="-90" max="90" value="{{ o['address']['latitude'] }}"></td>
+                    <td><input type="number" name="longitude_{{o['id']}}" id="longitude_{{o['id']}}" step="0.000001" min="-180" max="180" value="{{ o['address']['longitude'] }}"></td>
+                    <td><input type="date" name="date_{{o['id']}}" id="date_{{o['id']}}" value="{{ o['date'] }}"></td>
+                    <td><input type="time" name="delivery_time_start_{{o['id']}}" id="delivery_time_start_{{o['id']}}" value="{{ o['delivery_time_start'] }}"></td>
+                    <td><input type="time" name="delivery_time_end_{{o['id']}}" id="delivery_time_end_{{o['id']}}" value="{{ o['delivery_time_end'] }}"></td>
+                    <td>{{ o["comment"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </form>
+</main>
+{% endblock %}

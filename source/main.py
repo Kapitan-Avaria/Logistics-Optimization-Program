@@ -1,4 +1,5 @@
 from database.db_init import db_init
+from database.db_queries import upsert_orders, upsert_delivery_zones, upsert_vehicles
 from vrp.vrp_wrapper import VRPWrapper
 from config import Config
 
@@ -14,7 +15,136 @@ cfg = Config()
 @app.route('/')
 @app.route('/index')
 def index():
-    return render_template("index.html",  title='Главная')
+    status_texts = {
+        True: "Успешно",
+        False: "Не удалось",
+        None: "Не было"
+    }
+    status_colors = {
+        True: "green",
+        False: "red",
+        None: "gray"
+    }
+    return render_template(
+        "index.html",
+        title='Главная',
+        orders=vw.orders,
+        vehicles=vw.vehicles,
+        url_1c=cfg.URL_1C,
+        status=status_texts[vw.status_1c],
+        color=status_colors[vw.status_1c]
+    )
+
+
+@app.route('/edit_orders')
+def edit_orders():
+    return render_template(
+        "edit_orders.html",
+        title='Редактирование заказов',
+        orders=vw.orders,
+        clients=vw.clients
+    )
+
+
+@app.route('/update_orders', methods=['POST'])
+def update_orders():
+    orders = dict()
+    if request.method == 'POST':
+        for k, v in request.form.items():
+            if k == 'update_orders':
+                continue
+            if int(k.split('_')[-1]) not in orders.keys():
+                orders[int(k.split('_')[-1])] = dict()
+                orders[int(k.split('_')[-1])]["geo-location"] = dict()
+
+            if "number_" in k:
+                order_id = int(k.removeprefix('number_'))
+                orders[order_id]['number'] = v
+            if "address_" in k:
+                order_id = int(k.removeprefix('address_'))
+                orders[order_id]['address'] = v
+            if "delivery_zone_" in k:
+                order_id = int(k.removeprefix('delivery_zone_'))
+                orders[order_id]['delivery_zone'] = v
+            if "latitude_" in k:
+                order_id = int(k.removeprefix('latitude_'))
+                orders[order_id]['geo-location']['latitude'] = v
+            if "longitude_" in k:
+                order_id = int(k.removeprefix('longitude_'))
+                orders[order_id]['geo-location']['longitude'] = v
+            if "date_" in k:
+                order_id = int(k.removeprefix('date_'))
+                orders[order_id]['date'] = v
+            if "delivery_time_start_" in k:
+                order_id = int(k.removeprefix('delivery_time_start_'))
+                orders[order_id]['delivery_time_start'] = v
+            if "delivery_time_end_" in k:
+                order_id = int(k.removeprefix('delivery_time_end_'))
+                orders[order_id]['delivery_time_end'] = v
+    upsert_orders(list(orders.values()))
+    vw.load_data_from_db()
+    return redirect(request.referrer)
+
+
+@app.route('/edit_delivery_zones')
+def edit_delivery_zones():
+    return render_template(
+        "edit_delivery_zones.html",
+        title='Редактирование зон доставки',
+        delivery_zones=list(vw.delivery_zones.values()),
+        depot_address=cfg.DEPOT_ADDRESS
+    )
+
+
+@app.route('/update_delivery_zones', methods=['POST'])
+def update_delivery_zones():
+    delivery_zones = dict()
+    if request.method == 'POST':
+        for k, v in request.form.items():
+            if k == 'update_delivery_zones':
+                continue
+            if k.split('_')[-1] not in delivery_zones.keys():
+                delivery_zones[int(k.split('_')[-1])] = dict()
+
+            if "name_" in k:
+                zone_id = int(k.removeprefix('name_'))
+                delivery_zones[zone_id]["name"] = v
+            if "type_" in k:
+                zone_id = int(k.removeprefix('type_'))
+                delivery_zones[zone_id]["type"] = v
+    upsert_delivery_zones(list(delivery_zones.values()))
+    vw.load_data_from_db()
+    return redirect(request.referrer)
+
+
+@app.route('/edit_vehicles')
+def edit_vehicles():
+    return render_template(
+        "edit_vehicles.html",
+        title='Редактирование транспортных средств',
+        vehicles=vw.vehicles
+    )
+
+
+@app.route('/update_vehicles', methods=['POST'])
+def update_vehicles():
+    vehicles = dict()
+    if request.method == 'POST':
+        for k, v in request.form.items():
+            if k == 'update_vehicles':
+                continue
+            if k.split('_')[-1] not in vehicles.keys():
+                vehicles[int(k.split('_')[-1])] = dict()
+
+            if "name_" in k:
+                vehicle_id = int(k.removeprefix('name_'))
+                vehicles[vehicle_id]["name"] = v
+            if "category_" in k:
+                vehicle_id = int(k.removeprefix('type_'))
+                vehicles[vehicle_id]["category"] = v
+    upsert_vehicles(list(vehicles.values()))
+    vw.load_data_from_db()
+    return redirect(request.referrer)
 
 
 @app.route('/build_routes')
@@ -38,9 +168,11 @@ def build_routes():
 @app.route('/load_data',  methods=['POST'])
 def load_data_from_db():
     if request.method == 'POST':
-        vw.request_data_from_1c(db_is_empty, url_1c)
+        if 'url_1c_input' in request.form.keys() and request.form['url_1c_input'] != '':
+            cfg.URL_1C = request.form['url_1c_input']
+        vw.request_data_from_1c(db_is_empty, cfg.URL_1C)
         vw.load_data_from_db()
-    return redirect('/build_routes')
+    return redirect(request.referrer)
 
 
 @app.route('/run_vrp', methods=['POST'])
@@ -64,11 +196,10 @@ def run_vrp():
 
 if __name__ == '__main__':
     db_path = Path('..').resolve() / 'database.db'
-    url_1c = 'http://127.0.0.1:5001'
 
     # Initialize main clients and wrappers
     db_is_empty = db_init(db_path)
-    vw.request_data_from_1c(db_is_empty, url_1c)
+    vw.request_data_from_1c(db_is_empty, cfg.URL_1C)
     vw.load_data_from_db()
 
     app.run(debug=True, port=5002)
