@@ -40,7 +40,7 @@ def index():
 def edit_orders():
     return render_template(
         "edit_orders.html",
-        title='Редактирование заказов',
+        title='Редактировать заказы',
         orders=vw.orders,
         clients=vw.clients
     )
@@ -90,7 +90,7 @@ def update_orders():
 def edit_delivery_zones():
     return render_template(
         "edit_delivery_zones.html",
-        title='Редактирование зон доставки',
+        title='Редактировать зоны доставки',
         delivery_zones=list(vw.delivery_zones.values()),
         depot_address=cfg.DEPOT_ADDRESS
     )
@@ -121,7 +121,7 @@ def update_delivery_zones():
 def edit_vehicles():
     return render_template(
         "edit_vehicles.html",
-        title='Редактирование транспортных средств',
+        title='Редактировать машины',
         vehicles=vw.vehicles
     )
 

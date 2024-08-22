@@ -8,3 +8,8 @@
     display: table-cell;
     width: 50%;
 }
+
+.menu a {
+    padding-left: 8px;
+    padding-right: 8px;
+}
