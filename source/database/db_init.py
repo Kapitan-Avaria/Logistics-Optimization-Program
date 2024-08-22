@@ -4,6 +4,7 @@ from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
 
 from source.config import Config
+from pathlib import Path
 
 Base = declarative_base()
 engine = None
@@ -137,7 +138,7 @@ class FormFactor(Base):
     dimensions_template = Column(JSON)
 
 
-def db_init(db_path=Config().DB_PATH):
+def db_init(db_path=Path(Config().DB_PATH)):
     global engine
     global Session
     is_empty = False
