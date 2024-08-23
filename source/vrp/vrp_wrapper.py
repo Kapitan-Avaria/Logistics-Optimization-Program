@@ -5,7 +5,7 @@ from source.geocoding.geocoding_wrapper import GeocodingWrapper
 from source.database.db_queries import *
 from source.config import Config
 
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from copy import deepcopy
 import folium
 import numpy as np
@@ -39,6 +39,7 @@ class VRPWrapper:
         self.product_volumes = dict()
         self.time_windows = []
         self.vehicle_capacities = []
+        self.vehicle_time_windows = []
 
     def run(self, vehicles_ids, orders_ids, category_matters=True):
         def vehicle_index_from_vehicle_id(v_id):
@@ -133,8 +134,9 @@ class VRPWrapper:
             self.product_volumes,
             [self.time_windows[a] for a in addresses_indices],
             [self.vehicle_capacities[v] for v in vehicles_indices],
-            distance_evaluator,
-            [self.addresses[a]["delivery_zone_id"] for a in addresses_indices]
+            vehicle_time_windows=self.vehicle_time_windows,
+            distance_evaluator=distance_evaluator,
+            loc_clusters=[self.addresses[a]["delivery_zone_id"] for a in addresses_indices]
         )
         routes = cvrptw.construct_routes(start_from_farthest=start_from_farthest)
         cvrptw.print_routes(routes)
@@ -146,8 +148,8 @@ class VRPWrapper:
         """
         self.map = folium.Map(location=[self.depot_address["latitude"], self.depot_address["longitude"]], zoom_start=8)
         colors = [
-            'red', 'blue', 'gray', 'green', 'pink', 'darkgreen', 'darkred', 'lightred', 'orange', 'beige', 'lightgreen',
-            'darkblue', 'lightblue', 'purple', 'darkpurple', 'cadetblue', 'lightgray', 'black'
+            'red', 'blue', 'gray', 'green', 'pink', 'darkgreen', 'darkred', 'orange',
+            'darkblue', 'purple', 'cadetblue', 'black'
         ]
         routes = [v["routes"][0] for v in self.vehicles if len(v["routes"]) > 0]
         routes = [route for route in routes if len(route) > 0]
@@ -247,6 +249,7 @@ class VRPWrapper:
         # Load available orders from the database
         self.orders = get_objects(class_name=Order, status=0)
         self.products = dict()
+        cfg = Config()
 
         for o, order in enumerate(self.orders):
             # Load products and address in each order
@@ -288,7 +291,7 @@ class VRPWrapper:
             self.depot_address = get_objects(class_name=Address, id=random_zone["depot_id"])[0]
         except IndexError:
             print("[WARN]: Depot address was not loaded, inserting default")
-            self.depot_address = get_objects(class_name=Address, string_address=Config().DEPOT_ADDRESS)[0]
+            self.depot_address = get_objects(class_name=Address, string_address=cfg.DEPOT_ADDRESS)[0]
         self.depot_address = self.reload_address_if_not_geocoded(self.depot_address)
 
         self.unassigned_vehicles = [i for i in range(len(self.vehicles))]
@@ -300,7 +303,7 @@ class VRPWrapper:
 
         # ***************************
         # Prepare VRP data
-        self.actual_volume_ratio = Config().ACTUAL_VOLUME_RATIO
+        self.actual_volume_ratio = cfg.ACTUAL_VOLUME_RATIO
 
         self.num_orders = len(self.orders)
 
@@ -318,6 +321,30 @@ class VRPWrapper:
             ) for o in range(self.num_orders)
         ]
         self.vehicle_capacities = [v["dimensions"]["volume"] * self.actual_volume_ratio for v in self.vehicles]
+
+        def add_times(t, time_delta_string):
+            (h, m) = time_delta_string.split(':')
+            d = timedelta(hours=int(h), minutes=int(m))
+            t += d
+            return t
+
+        # Creating time windows for vehicles
+        shift_start_b = datetime.strptime(cfg.DEFAULT_SHIFT_START_B, "%H:%M")
+        shift_end_b = add_times(shift_start_b, cfg.DEFAULT_SHIFT_DURATION_B).time()
+        shift_start_c = datetime.strptime(cfg.DEFAULT_SHIFT_START_C, "%H:%M")
+        shift_end_c = add_times(shift_start_c, cfg.DEFAULT_SHIFT_DURATION_C).time()
+        shift_start_b = shift_start_b.time()
+        shift_start_c = shift_start_c.time()
+        self.vehicle_time_windows = [
+            [
+                shift_start_b.hour + shift_start_b.minute / 60,
+                shift_end_b.hour + shift_end_b.minute / 60
+            ] if v["category"] == "B" else [
+                shift_start_c.hour + shift_start_c.minute / 60,
+                shift_end_c.hour + shift_end_c.minute / 60
+            ] for v in self.vehicles
+        ]
+        print(self.vehicle_time_windows)
 
         # Calc total volume of each order
         for o, order in enumerate(self.orders):

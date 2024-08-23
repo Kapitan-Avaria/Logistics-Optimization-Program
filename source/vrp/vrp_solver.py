@@ -12,6 +12,7 @@ class CVRPTW:
             product_volumes,
             time_windows,
             vehicle_capacities,
+            vehicle_time_windows=None,
             distance_evaluator=None,
             loc_clusters=None
     ):
@@ -20,6 +21,7 @@ class CVRPTW:
         self.product_volumes = product_volumes
         self.time_windows = time_windows
         self.vehicle_capacities = vehicle_capacities
+        self.vehicle_time_windows = vehicle_time_windows
         self.vehicle_count = len(vehicle_capacities)
         self.calc_base_distance = self.default_distance_evaluator if distance_evaluator is None else distance_evaluator
         self.loc_clusters = loc_clusters
@@ -160,7 +162,7 @@ class CVRPTW:
     #
     #     return best_route
 
-    def try_add_to_route(self, route, location, current_time, vehicle_load, vehicle_capacity):
+    def try_add_to_route(self, route, location, current_time, vehicle_load, vehicle_capacity, vehicle_shift_end=None):
         # Calc arrival time
         if not route:
             arrival_time = self.time_dependent_travel_time(0, location, current_time)
@@ -177,6 +179,10 @@ class CVRPTW:
 
         # If it's now too late for the location, reject the location. Though it can't be at this point, I think
         if current_time > self.time_windows[location][1]:
+            return current_time, vehicle_load, wait_time, False
+
+        # If it's now too late for the vehicle, reject the location also
+        if vehicle_shift_end is not None and current_time > vehicle_shift_end:
             return current_time, vehicle_load, wait_time, False
 
         # Calc total volume of products for the location
@@ -345,7 +351,7 @@ class CVRPTW:
         routes = self.initial_solution()
         unvisited = set(range(1, len(self.locations)))
         vehicle_loads = [0] * self.vehicle_count
-        vehicle_times = [0] * self.vehicle_count
+        vehicle_times = [tw[0] for tw in self.vehicle_time_windows]  # Start from the earliest possible time
 
         subsets: list[set[int]] = []
         for v in range(self.vehicle_count):
@@ -381,9 +387,10 @@ class CVRPTW:
                 for loc in feasible_locations:
                     current_time = vehicle_times[v]
                     vehicle_load = vehicle_loads[v]
-                    new_time, new_load, wait_time, success = self.try_add_to_route(routes[v], loc, current_time,
-                                                                                   vehicle_load,
-                                                                                   self.vehicle_capacities[v])
+                    new_time, new_load, wait_time, success = self.try_add_to_route(
+                        routes[v], loc, current_time, vehicle_load,
+                        self.vehicle_capacities[v], self.vehicle_time_windows[v][1]
+                    )
                     if success:
                         routes[v].append((loc, new_time, new_load, wait_time))
                         vehicle_times[v] = new_time
