@@ -63,6 +63,7 @@ def edit_config():
             if new_v is None:
                 continue
             cfg.__setattr__(k, new_v)
+        vw.load_data_from_db()
         return redirect(request.referrer)
 
 

@@ -138,26 +138,27 @@ class CVRPTW:
                 if success:
                     route[i] = (route[i][0], current_time, vehicle_load, wait_time)
                 else:
+                    # Route is not possible
                     return False
         return route
 
-    def improve_route(self, route):
-        best_route = route
-        best_time = route[-1][1]
-        for i in range(1, len(route)):
-            for j in range(i + 1, len(route)):
-                new_route = deepcopy(best_route)
-                new_route[i:j] = new_route[i:j][::-1]
-                new_route = self.update_route_params(new_route)
-                if not new_route:
-                    continue
-
-                new_time = new_route[-1][1]
-                if new_time < best_time:
-                    best_route = new_route
-                    best_time = new_time
-
-        return best_route
+    # def improve_route(self, route):
+    #     best_route = route
+    #     best_time = route[-1][1]
+    #     for i in range(2, len(route)):
+    #         for j in range(i + 1, len(route)):
+    #             new_route = deepcopy(best_route)
+    #             new_route[i:j] = new_route[i:j][::-1]
+    #             new_route = self.update_route_params(new_route)
+    #             if not new_route:
+    #                 continue
+    #
+    #             new_time = new_route[-1][1]
+    #             if new_time < best_time:
+    #                 best_route = new_route
+    #                 best_time = new_time
+    #
+    #     return best_route
 
     def try_add_to_route(self, route, location, current_time, vehicle_load, vehicle_capacity):
         # Calc arrival time

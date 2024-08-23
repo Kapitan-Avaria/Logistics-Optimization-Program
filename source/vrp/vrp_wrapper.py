@@ -27,7 +27,7 @@ class VRPWrapper:
         self.unassigned_vehicles = []
         self.unassigned_orders = []
         self.approved_routes = []
-        self.actual_volume_ratio = Config().ACTUAL_VOLUME_RATIO  # A coefficient to diminish volume of the vehicle
+        self.actual_volume_ratio = 1.  # A coefficient to diminish volume of the vehicle
         self.request_coords_on_load = True
         self.map = folium.Map()
 
@@ -300,6 +300,8 @@ class VRPWrapper:
 
         # ***************************
         # Prepare VRP data
+        self.actual_volume_ratio = Config().ACTUAL_VOLUME_RATIO
+
         self.num_orders = len(self.orders)
 
         self.addresses = [self.depot_address] + [self.orders[o]["address"] for o in range(self.num_orders)]
