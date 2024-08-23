@@ -30,7 +30,7 @@ def upsert_orders(orders: list[dict], session: Session):
             client: Client = select_existing_object(session, Client, name=order["client"])
             existing_order.client_id = client.id
 
-        if existing_order.address_id is None:
+        if existing_order.address_id is None or True:
             address = insert_address_from_order(order, session)
             existing_order.address_id = address.id
 
