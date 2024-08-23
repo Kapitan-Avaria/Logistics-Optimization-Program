@@ -3,6 +3,9 @@
 {% block content %}
 <main>
     <button name="edit_config" value="" form="edit_config_form">Сохранить</button>
+    <a href="/edit_orders">
+        <button name="edit_orders">Перейти к настройке заказов -></button>
+    </a>
     <form action="/edit_config" id="edit_config_form" method="post">
         <table>
             <thead>
