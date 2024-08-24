@@ -12,7 +12,7 @@
 
                 <fieldset style="overflow-y:scroll; height: 256px;">
                     <legend>Выберите машины, которые будут участвовать в распределении</legend>
-                    <table>
+                    <table class="vehicles-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -36,27 +36,32 @@
                             </tr>
                             {% for route in v["routes"] %}
                             <tr>
-                                <td colspan="5">
-                                    <table>
-                                        <thead>
-                                            <tr>
-                                                <th>Адрес</th>
-                                                <th>Время прибытия</th>
-                                                <th>Время ожидания</th>
-                                                <th>Итоговая загрузка</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {% for loc in route %}
-                                            <tr>
-                                                <td>{{ loc["address"]["string_address"] }}</td>
-                                                <td>{{ loc["arrival_time"] }}</td>
-                                                <td>{{ loc["wait_time"] }}</td>
-                                                <td>{{ loc["load"] }}</td>
-                                            </tr>
-                                            {% endfor %}
-                                        </tbody>
-                                    </table>
+                                <td colspan="6">
+                                    <details>
+                                        <summary>Маршрут</summary>
+                                        <table class="inline-routes-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>№</th>
+                                                    <th>Адрес</th>
+                                                    <th>Время прибытия</th>
+                                                    <th>Время ожидания</th>
+                                                    <th>Итоговая загрузка</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for loc in route %}
+                                                <tr>
+                                                    <td>{{ loop.index }}</td>
+                                                    <td>{{ loc["address"]["string_address"] }}</td>
+                                                    <td>{{ loc["arrival_time"] }}</td>
+                                                    <td>{{ loc["wait_time"] }}</td>
+                                                    <td>{{ loc["load"] }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </details>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -68,7 +73,7 @@
 
                 <fieldset style="overflow-y:scroll; height: 256px;">
                     <legend>Выберите заказы, которые будут участвовать в распределении</legend>
-                    <table>
+                    <table class="orders-table">
                         <thead>
                             <tr>
                                 <th>Заказ</th>

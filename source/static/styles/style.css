@@ -18,3 +18,12 @@
     padding-left: 8px;
     padding-right: 8px;
 }
+
+table {
+    border-collapse: collapse;
+}
+
+.vehicles-table th, .vehicles-table td, .orders-table th, .orders-table td {
+    border: 1px solid rgb(200 200 200);
+    padding: 0px 10px;
+}
