@@ -15,6 +15,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>ID</th>
                                 <th>Машина</th>
                                 <th>Категория</th>
                                 <th>Объем</th>
@@ -25,6 +26,7 @@
                         <tbody>
                             {% for v in vehicles %}
                             <tr>
+                                <td>{{ v["id"] }}</td>
                                 <td><input type="checkbox" name="select_vehicle_{{v['id']}}" id="select_vehicle_{{v['id']}}" checked>
                                     <label for="select_vehicle_{{v['id']}}">{{ v["name"] }}</label></td>
                                 <td>{{ v["category"] }}</td>

@@ -180,6 +180,7 @@ def update_vehicles():
 
 @app.route('/build_routes')
 def build_routes():
+    vw.draw_map()
     iframe = vw.map.get_root()._repr_html_()
 
     return render_template(

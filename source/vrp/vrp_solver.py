@@ -171,6 +171,7 @@ class CVRPTW:
 
         # If it's too late for the location, reject the location
         if arrival_time > self.time_windows[location][1]:
+            print(f"\tToo late for location {location}, Arrival time {arrival_time}, Right time window {self.time_windows[location][1]}")
             return current_time, vehicle_load, 0, False
 
         # Calc wait time in case of arrival before the left time window border
@@ -179,10 +180,12 @@ class CVRPTW:
 
         # If it's now too late for the location, reject the location. Though it can't be at this point, I think
         if current_time > self.time_windows[location][1]:
+            print(f"\tToo late for location {location}, Current time {current_time}, Right time window {self.time_windows[location][1]}")
             return current_time, vehicle_load, wait_time, False
 
         # If it's now too late for the vehicle, reject the location also
         if vehicle_shift_end is not None and current_time > vehicle_shift_end:
+            print(f"\tToo late for location {location}, Current time {current_time}, Vehicle shift ends at {vehicle_shift_end}")
             return current_time, vehicle_load, wait_time, False
 
         # Calc total volume of products for the location
@@ -192,6 +195,7 @@ class CVRPTW:
 
         # If not enough capacity to load all products for the location, reject the location
         if vehicle_load + total_volume > vehicle_capacity:
+            print(f"\tNot enough capacity for location {location}, Vehicle load {vehicle_load}, Location volume {total_volume}, Vehicle capacity {vehicle_capacity}")
             return current_time, vehicle_load, wait_time, False
 
         # If all conditions are satisfied, add load to the vehicle and append route with the location

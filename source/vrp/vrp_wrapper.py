@@ -151,25 +151,38 @@ class VRPWrapper:
             'red', 'blue', 'gray', 'green', 'pink', 'darkgreen', 'darkred', 'orange',
             'darkblue', 'purple', 'cadetblue', 'black'
         ]
+        # Get routes of all vehicles
         routes = [v["routes"][0] for v in self.vehicles if len(v["routes"]) > 0]
+        # Select non-empty routes
         routes = [route for route in routes if len(route) > 0]
+
+        vehicles = [v for v in self.vehicles if len(v["routes"]) > 0]
+        vehicles = [v for v in vehicles if len(v["routes"][0]) > 0]
+
+        # Add markers of all locations to the map
         for i in range(1, len(self.locations)):
             if i-1 in self.unassigned_orders:
                 folium.Marker(
                     location=[self.locations[i][1], self.locations[i][0]],
-                    tooltip=f"Адрес: {self.addresses[i]['string_address']},\n[{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}]",
+                    tooltip=f"Адрес: {self.addresses[i]['string_address']},<br>"
+                            f"Временное окно: [{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}]",
                     icon=folium.Icon(color="blue", icon="info-sign")
                 ).add_to(self.map)
+        # Add polyline and green markers for each route to the map
         for r, route in enumerate(routes):
-            route_group = folium.FeatureGroup(name=f'<span style="color: {colors[r % len(colors)]};">Route {r + 1}</span>')
+            route_group = folium.FeatureGroup(
+                name=f'<span style="color: {colors[r % len(colors)]};">Машина {vehicles[r]["id"]}</span>'
+            )
             for i in range(len(route)):
                 loc = route[i]["address"]
                 marker = folium.Marker(
                     location=[loc["latitude"], loc["longitude"]],
-                    tooltip=f"Location: {i}, "
-                            f"Arrival Time: {route[i]['arrival_time']:.2f}, "
-                            f"Load: {route[i]['load']:.2f}, "
-                            f"Wait Time: {route[i]['wait_time']:.2f}",
+                    tooltip=f"Адрес: {loc['string_address']},<br>"
+                            f"Временное окно: [{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}],<br><br>"
+                            f"<b><span style='color: {colors[r % len(colors)]};'>Маршрут машины {vehicles[r]['id']}</span></b>, Точка: <b>{i + 1}</b> из <b>{len(route)}</b>,<br>"
+                            f"Прибытие: {route[i]['arrival_time']:.2f},<br>"
+                            f"Ожидание: {route[i]['wait_time']:.2f},<br>"
+                            f"Итого доставлено: {route[i]['load']:.2f}",
                     icon=folium.Icon(color="green", icon="ok-sign")
                 )
                 route_group.add_child(marker)
@@ -344,7 +357,6 @@ class VRPWrapper:
                 shift_end_c.hour + shift_end_c.minute / 60
             ] for v in self.vehicles
         ]
-        print(self.vehicle_time_windows)
 
         # Calc total volume of each order
         for o, order in enumerate(self.orders):

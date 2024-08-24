@@ -11,6 +11,7 @@
         <table>
             <thead>
                 <tr>
+                    <th>ID</th>
                     <th>Название</th>
                     <th>Категория</th>
                     <th>Внутренний объем</th>
@@ -19,6 +20,7 @@
             <tbody>
                 {% for v in vehicles %}
                 <tr>
+                    <td>{{ v["id"] }}</td>
                     <td><input type="hidden" name="name_{{v['id']}}" value="{{ v['name'] }}">{{ v["name"] }}</td>
                     <td><select name="category_{{v['id']}}" id="category_{{v['id']}}">
                         <option value="C" {{ "selected" if v["category"] == "C" }}>C</option>
