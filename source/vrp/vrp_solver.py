@@ -411,6 +411,7 @@ class CVRPTW:
                             f"wait time {wait_time:.2f}, and load {new_load:.2f}")
                         break
                 if not progress:
+                    subsets[v] = set()  # Release occupied locations
                     print("No progress made, go to next vehicle")
                     break  # Go to next vehicle
 
