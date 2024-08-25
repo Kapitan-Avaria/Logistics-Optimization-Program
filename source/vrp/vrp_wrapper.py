@@ -6,9 +6,7 @@ from source.database.db_queries import *
 from source.config import Config
 
 from datetime import datetime, date, timedelta
-from copy import deepcopy
 import folium
-import numpy as np
 
 
 class VRPWrapper:
