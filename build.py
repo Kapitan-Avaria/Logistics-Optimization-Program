@@ -8,6 +8,7 @@ PyInstaller.__main__.run([
     '--distpath', '.\\distribution\\dist',
     '--workpath', '.\\distribution\\build',
     '--specpath', '.\\distribution',
+    '--contents-directory', 'program_data',
     '--add-data', source_path + '\\static:static',
     '--add-data', source_path + '\\templates:templates',
     '--add-data',  source_path + '\\data:data',
