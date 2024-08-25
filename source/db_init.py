@@ -3,8 +3,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy import Column, Integer, Float, String, DECIMAL, Text, JSON, Date, Time, DateTime, ForeignKey, UniqueConstraint
 
-from source.config import Config
-from pathlib import Path
+import sys
+import os
 
 Base = declarative_base()
 engine = None
@@ -138,13 +138,22 @@ class FormFactor(Base):
     dimensions_template = Column(JSON)
 
 
-def db_init(db_path=Path(Config().DB_PATH)):
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
+def db_init(db_path=resource_path('data/database.db')):
     global engine
     global Session
     is_empty = False
 
-    if not db_path.parent.exists():
-        raise Exception("You need to set db file name")
+    # if not db_path.parent.exists():
+    #     raise Exception("You need to set db file name")
 
     engine = create_engine(f"sqlite+pysqlite:///{db_path}")
     Session = sessionmaker(bind=engine)

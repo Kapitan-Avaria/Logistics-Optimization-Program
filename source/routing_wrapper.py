@@ -1,9 +1,9 @@
-from source.routing.ors_routing_api_client import ORSRoutingClient
+from ors_routing_api_client import ORSRoutingClient
 # from source.routing.yandex_routing_api_client import YandexRoutingClient
 # from source.routing.yandex_in_browser_router import YandexInBrowserRouter
 # from source.routing.yandex_in_browser_router_manual import YandexManualRoutingHelper
 
-from source.config import Config
+from config import Config
 from time import sleep
 
 

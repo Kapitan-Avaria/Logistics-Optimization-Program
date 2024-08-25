@@ -1,7 +1,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import Session as SessionClass
 
-from source.database.db_init import Session
+from db_init import Session
 import numpy as np
 
 

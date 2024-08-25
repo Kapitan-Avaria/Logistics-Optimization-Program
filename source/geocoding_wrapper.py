@@ -1,7 +1,7 @@
-from source.geocoding.yandex_geo_client import YandexGeoClient
-from source.config import Config
-from source.database.db_init import Address
-from source.database.db_queries import insert_coords, get_objects
+from yandex_geo_client import YandexGeoClient
+from config import Config
+from db_init import Address
+from db_queries import insert_coords, get_objects
 from time import sleep
 
 

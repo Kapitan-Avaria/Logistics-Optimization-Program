@@ -4,4 +4,4 @@ venv
 database*.db
 00 data_templates
 00 drafts
-/source/config.cfg
+/source/data/config.cfg

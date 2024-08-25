@@ -1,9 +1,8 @@
-from database.db_init import db_init
-from database.db_queries import upsert_orders, upsert_delivery_zones, upsert_vehicles
-from vrp.vrp_wrapper import VRPWrapper
+from db_init import db_init
+from db_queries import upsert_orders, upsert_delivery_zones, upsert_vehicles
+from vrp_wrapper import VRPWrapper
 from config import Config
 
-from pathlib import Path
 from flask import Flask, render_template, redirect, request
 
 
@@ -227,10 +226,9 @@ def run_vrp():
 
 
 if __name__ == '__main__':
-    db_path = Path('..').resolve() / 'database.db'
-
+    print("Starting my program...")
     # Initialize main clients and wrappers
-    db_is_empty = db_init(db_path)
+    db_is_empty = db_init()
     vw.request_data_from_1c(db_is_empty, cfg.URL_1C)
     vw.load_data_from_db()
 

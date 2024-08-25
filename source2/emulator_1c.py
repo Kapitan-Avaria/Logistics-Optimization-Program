@@ -1,4 +1,4 @@
-from source2.example_data_load import generate_example_products, generate_example_vehicles, generate_example_orders
+from example_data_load import generate_example_products, generate_example_vehicles, generate_example_orders
 from flask import Flask
 
 
@@ -54,4 +54,5 @@ def get_geodata(date):
 
 
 if __name__ == '__main__':
+    print('App is running!')
     app.run(debug=True, port=5001)

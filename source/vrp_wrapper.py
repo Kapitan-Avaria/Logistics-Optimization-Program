@@ -1,11 +1,11 @@
-from source.vrp.vrp_solver import CVRPTW
-from source.client_1c.http_client_1c import HTTPClient1C
-from source.routing.routing_wrapper import RoutingWrapper
-from source.geocoding.geocoding_wrapper import GeocodingWrapper
-from source.database.db_queries import *
-from source.config import Config
+from vrp_solver import CVRPTW
+from http_client_1c import HTTPClient1C
+from routing_wrapper import RoutingWrapper
+from geocoding_wrapper import GeocodingWrapper
+from db_queries import *
+from config import Config
 
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import folium
 
 

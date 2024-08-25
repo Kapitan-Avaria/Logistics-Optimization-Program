@@ -1,6 +1,3 @@
-from source.database.db_queries import *
-from source.database.db_init import db_init
-
 from pathlib import Path
 import random
 
@@ -66,6 +63,9 @@ def generate_example_orders():
 
 
 if __name__ == "__main__":
+    from source.db_queries import *
+    from source.db_init import db_init
+
     random.seed(42)
     db_path = Path('..').resolve() / 'database.db'
     db_is_empty = db_init(db_path)

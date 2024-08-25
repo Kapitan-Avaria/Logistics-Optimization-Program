@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import sys
+import os
 
 
 class Config:
@@ -9,17 +11,24 @@ class Config:
         return cls.instance
 
     def __init__(self):
-        path = Path('').resolve()
-        if (path / 'source').exists():
-            path = path / 'source'
-        else:
-            while path.name != 'source':
-                path = path.parent
-        self.path = path
+        def resource_path(relative_path):
+            try:
+                base_path = sys._MEIPASS
+            except Exception:
+                base_path = os.path.abspath(".")
+
+            return os.path.join(base_path, relative_path)
+        # path = Path('').resolve()
+        # if (path / 'data').exists():
+        #     path = path / 'data'
+        # else:
+        #     while path.name != 'source':
+        #         path = path.parent
+        self.path = resource_path('data/config.cfg')
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
-        with open(self.path / "config.cfg", 'r+', encoding='utf8') as f:
+        with open(self.path, 'r+', encoding='utf8') as f:
             config = json.load(f)
             if key not in config.keys():
                 return
@@ -38,6 +47,6 @@ class Config:
         return config[item]
 
     def load_dict(self):
-        with open(self.path / "config.cfg", 'r', encoding='utf8') as f:
+        with open(self.path, 'r', encoding='utf8') as f:
             config = json.load(f)
             return config

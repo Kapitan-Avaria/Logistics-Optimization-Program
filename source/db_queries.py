@@ -3,8 +3,8 @@ from decimal import Decimal
 import numpy as np
 from datetime import datetime
 
-from source.database.__all_models import *
-from source.database.db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
+from db_init import Order, Client, Address, Vehicle, VehicleGeodata, Product, OrderProduct, DeliveryZone, Segment, SegmentStatistics, FormFactor
+from db_utils import use_with_session, select_existing_object, select_many_objects, extract_object_as_dict, calc_direct_distances
 
 
 @use_with_session
