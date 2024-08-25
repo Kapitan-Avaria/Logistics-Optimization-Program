@@ -5,6 +5,7 @@ source_path = 'C:\\Data and Projects\\Vershina\\Logistics-Optimization-Program\\
 PyInstaller.__main__.run([
     '--onedir',
     '--console',
+    '--name', 'VRP_Program',
     '--distpath', '.\\distribution\\dist',
     '--workpath', '.\\distribution\\build',
     '--specpath', '.\\distribution',
