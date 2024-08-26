@@ -7,6 +7,7 @@ from config import Config
 
 from datetime import datetime, timedelta
 import folium
+from pprint import pprint
 
 
 class VRPWrapper:
@@ -39,6 +40,20 @@ class VRPWrapper:
         self.vehicle_capacities = []
         self.vehicle_time_windows = []
 
+    def export_routes(self):
+        res = []
+        for v in self.vehicles:
+            res.append(
+                {
+                    "vehicle_id": v["id"],
+                    "vehicle_name": v["name"],
+                    "routes": v["routes"]
+                }
+            )
+        print('\nРезультат для экспорта в 1С:')
+        pprint(res)
+        return res
+
     def run(self, vehicles_ids, orders_ids, category_matters=True):
         def vehicle_index_from_vehicle_id(v_id):
             for i in range(len(self.vehicles)):
@@ -59,7 +74,7 @@ class VRPWrapper:
                 if len(route) > 0:
                     for i, point in enumerate(route):
                         converted_route.append({
-                            # 'order': self.orders[locations_indices[point[0]]],
+                            'order_number': self.orders[locations_indices[point[0] - 1]]["number"],
                             'address': self.addresses[locations_indices[point[0]]],
                             'arrival_time': point[1],
                             'load': point[2],

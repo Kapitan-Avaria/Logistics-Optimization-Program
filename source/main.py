@@ -222,11 +222,11 @@ def run_vrp():
                     orders_ids.append(order_id)
 
         vw.run(vehicles_ids, orders_ids)
+        vw.export_routes()
     return redirect('/build_routes')
 
 
 if __name__ == '__main__':
-    print("Starting my program...")
     # Initialize main clients and wrappers
     db_is_empty = db_init()
     vw.request_data_from_1c(db_is_empty, cfg.URL_1C)
