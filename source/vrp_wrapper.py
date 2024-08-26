@@ -246,8 +246,8 @@ class VRPWrapper:
         all_vehicles = client.get_all_vehicles()
         upsert_vehicles(all_vehicles)
 
-        archived_orders = client.get_archived_orders()
-        upsert_orders(archived_orders)
+        # archived_orders = client.get_archived_orders()
+        # upsert_orders(archived_orders)
 
         # Load operational data from 1C
         # Load available orders to the database
