@@ -29,7 +29,7 @@ def extract_object_as_dict(obj):
     return res
 
 
-def select_existing_object(session: Session, class_name, **kwargs):
+def select_existing_object(session: SessionClass, class_name, **kwargs):
     for key in kwargs.keys():
         if isinstance(kwargs[key], str):
             kwargs[key] = regularize(kwargs[key])
