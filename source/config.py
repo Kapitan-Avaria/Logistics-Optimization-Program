@@ -18,12 +18,7 @@ class Config:
                 base_path = os.path.abspath(".")
 
             return os.path.join(base_path, relative_path)
-        # path = Path('').resolve()
-        # if (path / 'data').exists():
-        #     path = path / 'data'
-        # else:
-        #     while path.name != 'source':
-        #         path = path.parent
+
         self.path = resource_path('data/config.cfg')
 
     def __setattr__(self, key, value):
