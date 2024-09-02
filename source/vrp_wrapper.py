@@ -261,11 +261,11 @@ class VRPWrapper:
                 self.reload_address_if_not_geocoded(address)
 
         # Load available vehicles from 1C
-        self.available_vehicles = client.get_available_vehicles()
-        for v in self.available_vehicles:
-            vehicle_obj = get_objects(class_name=Vehicle, name=v["name"])
-            if len(vehicle_obj) == 0:
-                upsert_vehicles(client.get_vehicle(v["name"]))
+        # self.available_vehicles = client.get_available_vehicles()
+        # for v in self.available_vehicles:
+        #     vehicle_obj = get_objects(class_name=Vehicle, name=v["name"])
+        #     if len(vehicle_obj) == 0:
+        #         upsert_vehicles(client.get_vehicle(v["name"]))
 
     def load_data_from_db(self):
         """
