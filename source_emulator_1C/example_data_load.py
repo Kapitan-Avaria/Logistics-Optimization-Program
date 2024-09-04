@@ -85,7 +85,7 @@ if __name__ == "__main__":
     upsert_products(products["products"])
     upsert_vehicles(vehicles["vehicles"])
     upsert_orders(orders["orders"])
-    insert_addresses([depot_address])
+    upsert_addresses([depot_address])
     insert_segments_where_lacking(100000)
 
 

@@ -1,4 +1,4 @@
-from ors_routing_api_client import ORSRoutingClient
+from routing_api_ors_client import ORSRoutingClient
 # from source.routing.yandex_routing_api_client import YandexRoutingClient
 # from source.routing.yandex_in_browser_router import YandexInBrowserRouter
 # from source.routing.yandex_in_browser_router_manual import YandexManualRoutingHelper

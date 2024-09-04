@@ -31,7 +31,7 @@ def upsert_orders(orders: list[dict], session: Session):
             existing_order.client_id = client.id
 
         if existing_order.address_id is None or True:
-            address = insert_address_from_order(order, session)
+            address = upsert_address_from_order(order, session)
             existing_order.address_id = address.id
 
         if "delivery_time_start" in order.keys():
@@ -59,7 +59,7 @@ def upsert_orders(orders: list[dict], session: Session):
                 product_in_order.quantity = prd["quantity"]
 
 
-def insert_address_from_dict(d: dict, session: Session):
+def upsert_address_from_dict(d: dict, session: Session):
     address = select_existing_object(session, Address, string_address=d["address"])
     if "geo_location" in d.keys() and d["geo_location"]:
         address.longitude = Decimal(d["geo_location"]["longitude"])
@@ -76,14 +76,14 @@ def insert_address_from_dict(d: dict, session: Session):
 
 
 @use_with_session
-def insert_addresses(addresses: list, session: Session):
+def upsert_addresses(addresses: list, session: Session):
     for a in addresses:
-        insert_address_from_dict(a, session)
+        upsert_address_from_dict(a, session)
 
 
 @use_with_session
-def insert_address_from_order(order, session: Session):
-    address = insert_address_from_dict(order, session)
+def upsert_address_from_order(order, session: Session):
+    address = upsert_address_from_dict(order, session)
     return address
 
 
@@ -152,9 +152,18 @@ def upsert_vehicles(vehicles: list[dict], session: Session):
         if existing_vehicle.category is None and vehicle["category"]:
             existing_vehicle.category = vehicle["category"]
 
-        if existing_vehicle.dimensions is None and vehicle["dimensions"]:
-            volume = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
-            existing_vehicle.dimensions = {"inner": vehicle["dimensions"], "volume": volume}
+        if "volume_capacity" in vehicle.keys() and vehicle["volume_capacity"]:
+            if existing_vehicle.dimensions is None:
+                existing_vehicle.dimensions = {}
+            existing_vehicle.dimensions["volume"] = vehicle["volume_capacity"]
+
+        if "dimensions" in vehicle.keys() and vehicle["dimensions"]:
+            if existing_vehicle.dimensions is None:
+                existing_vehicle.dimensions = {}
+            existing_vehicle.dimensions["inner"] = vehicle["dimensions"]
+            if "volume" not in existing_vehicle.dimensions.keys():
+                volume = vehicle["dimensions"][0] * vehicle["dimensions"][1] * vehicle["dimensions"][2]
+                existing_vehicle.dimensions["volume"] = volume
 
         if existing_vehicle.weight_capacity is None and vehicle["weight_capacity"]:
             existing_vehicle.weight_capacity = vehicle["weight_capacity"]
@@ -176,15 +185,17 @@ def upsert_products(products: list[dict], session: Session):
     for product in products:
         existing_product: Product = select_existing_object(session, Product, name=product["name"])
 
-        if existing_product.form_factor is None:
+        if "form_factor" in product.keys() and product["form_factor"]:
             form_factor: FormFactor = select_existing_object(session, FormFactor, name=product["form_factor"])
             existing_product.form_factor = form_factor.id
-        if existing_product.dimensions is None and product["dimensions"]:
+        if "volume" in product.keys() and product["volume"]:
+            existing_product.volume = product["volume"]
+        if "dimensions" in product.keys() and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
-        if product["form_factor"] == 'tire':
-            dims = tire_dims_to_external_mm(product["dimensions"])
-            volume = dims[0] * dims[1] * dims[2]
-            existing_product.volume = volume
+            if "volume" not in existing_product.dimensions.keys() and product["form_factor"] == 'tire':
+                dims = tire_dims_to_external_mm(product["dimensions"])
+                volume = dims[0] * dims[1] * dims[2]
+                existing_product.volume = volume
 
 
 @use_with_session

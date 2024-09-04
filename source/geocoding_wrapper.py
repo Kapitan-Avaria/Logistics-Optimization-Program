@@ -1,4 +1,4 @@
-from yandex_geo_client import YandexGeoClient
+from geocoding_yandex_client import YandexGeoClient
 from config import Config
 from db_init import Address
 from db_queries import insert_coords, get_objects

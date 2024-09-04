@@ -252,6 +252,10 @@ class VRPWrapper:
         # Load operational data from 1C
         # Load available orders to the database
         available_orders = client.get_available_orders()
+        for o, order in enumerate(available_orders):
+            depot_address = client.get_depot(available_orders[o]["depot_id"])
+            upsert_addresses([depot_address])
+            available_orders[o]["depot_address"] = depot_address["address"]
         upsert_orders(available_orders)
 
         if self.request_coords_on_load:
