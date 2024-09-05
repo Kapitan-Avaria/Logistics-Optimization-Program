@@ -45,8 +45,8 @@ class HTTPClient1C:
         return requests.get(self.url + f'/get_product/{name}').json()["products"]
 
     @safe_request
-    def get_product_by_id(self, id):
-        return requests.get(self.url + f'/get_product_by_id/{id}').json()["products"]
+    def get_product_by_id(self, product_id):
+        return requests.get(self.url + f'/get_product_by_id/{product_id}').json()["products"]
 
     @safe_request
     def get_all_vehicles(self):
