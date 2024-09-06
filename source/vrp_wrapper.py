@@ -80,6 +80,7 @@ class VRPWrapper:
                             'load': point[2],
                             'wait_time': point[3]
                         })
+                        self.unassigned_orders.remove(self.orders.index(self.orders[locations_indices[point[0] - 1]]))
                 converted_routes.append(converted_route)
             return converted_routes
 
