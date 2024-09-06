@@ -85,6 +85,7 @@ class Route(Base):
     __tablename__ = "routes"
 
     id = Column(Integer, primary_key=True)
+    name = Column(String, unique=True)
     vehicle_id = Column(Integer, ForeignKey("vehicles.id"))
     route_data = Column(JSON)   # Упорядоченный список адресов доставки и время прохождения промежутков
     date = Column(Date)
