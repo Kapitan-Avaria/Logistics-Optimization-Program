@@ -22,13 +22,16 @@ def get_available_orders():
 
 @app.route('/get_depot/<depot_id>', methods=['GET'])
 def get_depot(depot_id):
-    res = {
-        "address": "Республика Адыгея, п.Яблоновский, ул.Индустриальная 4",
-        "geo-location": {
-            "latitude": "44.987749",
-            "longitude": "38.957643"
+    if depot_id == '12345678':
+        res = {
+            "address": "Республика Адыгея, п.Яблоновский, ул.Индустриальная 4",
+            "geo-location": {
+                "latitude": "44.987749",
+                "longitude": "38.957643"
+            }
         }
-    }
+    else:
+        res = {}
     return res
 
 

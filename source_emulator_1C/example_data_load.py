@@ -56,7 +56,7 @@ def generate_example_orders():
                 for p in range(random.randint(1, 10))
             ],
             "status": 0,
-            "depot_address": "Республика Адыгея, п.Яблоновский, ул.Индустриальная 4"
+            "depot_id":  '12345678'
         }
         orders_data["orders"].append(order)
     return orders_data

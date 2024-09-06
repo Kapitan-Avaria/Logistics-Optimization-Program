@@ -192,7 +192,7 @@ def upsert_products(products: list[dict], session: Session):
             existing_product.volume = product["volume"]
         if "dimensions" in product.keys() and product["dimensions"]:
             existing_product.dimensions = product["dimensions"]
-            if "volume" not in existing_product.dimensions.keys() and product["form_factor"] == 'tire':
+            if existing_product.volume is None and product["form_factor"] == 'tire':
                 dims = tire_dims_to_external_mm(product["dimensions"])
                 volume = dims[0] * dims[1] * dims[2]
                 existing_product.volume = volume
