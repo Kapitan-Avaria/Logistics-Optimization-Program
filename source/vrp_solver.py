@@ -37,14 +37,21 @@ class CVRPTW:
         min_velocity = 11
 
         # Define traffic conditions
-        if 0 <= current_time < 6:
+        # if 0 <= current_time < 6:
+        #     velocity = base_velocity
+        # elif 6 <= current_time < 8:
+        #     velocity = base_velocity * (min_velocity - base_velocity) / 2 + 87
+        # elif 8 <= current_time < 17:
+        #     velocity = min_velocity
+        # elif 17 <= current_time < 23:
+        #     velocity = base_velocity * (base_velocity - min_velocity) / 6 - 42.84
+        # else:
+        #     velocity = base_velocity
+
+        if 0 <= current_time < 8:
             velocity = base_velocity
-        elif 6 <= current_time < 8:
-            velocity = base_velocity * (min_velocity - base_velocity) / 2 + 87
-        elif 8 <= current_time < 17:
+        elif 8 <= current_time < 23:
             velocity = min_velocity
-        elif 17 <= current_time < 23:
-            velocity = base_velocity * (base_velocity - min_velocity) / 6 - 42.84
         else:
             velocity = base_velocity
 
@@ -406,7 +413,7 @@ class CVRPTW:
 
                         progress = True
                         print(
-                            f"Vehicle {v + 1} added location {loc} with arrival time {new_time:.2f}, "
+                            f"Vehicle {v + 1} added location {loc} with delivery time {new_time:.2f}, "
                             f"wait time {wait_time:.2f}, and load {new_load:.2f}")
                         break
                 if not progress:

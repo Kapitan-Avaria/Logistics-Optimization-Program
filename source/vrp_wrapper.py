@@ -187,16 +187,17 @@ class VRPWrapper:
             route_group = folium.FeatureGroup(
                 name=f'<span style="color: {colors[r % len(colors)]};">Машина {vehicles[r]["id"]}</span>'
             )
-            for i in range(len(route)):
-                loc = route[i]["address"]
+            for p in range(len(route)):
+                loc = route[p]["address"]
+                i = self.addresses.index(loc)
                 marker = folium.Marker(
                     location=[loc["latitude"], loc["longitude"]],
                     tooltip=f"Адрес: {loc['string_address']},<br>"
                             f"Временное окно: [{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}],<br><br>"
-                            f"<b><span style='color: {colors[r % len(colors)]};'>Маршрут машины {vehicles[r]['id']}</span></b>, Точка: <b>{i + 1}</b> из <b>{len(route)}</b>,<br>"
-                            f"Прибытие: {route[i]['arrival_time']:.2f},<br>"
-                            f"Ожидание: {route[i]['wait_time']:.2f},<br>"
-                            f"Итого доставлено: {route[i]['load']:.2f}",
+                            f"<b><span style='color: {colors[r % len(colors)]};'>Маршрут машины {vehicles[r]['id']}</span></b>, Точка: <b>{p + 1}</b> из <b>{len(route)}</b>,<br>"
+                            f"Отгрузка: {route[p]['arrival_time']:.2f},<br>"
+                            f"Ожидание: {route[p]['wait_time']:.2f},<br>"
+                            f"Итого доставлено: {route[p]['load']:.2f}",
                     icon=folium.Icon(color="green", icon="ok-sign")
                 )
                 route_group.add_child(marker)
