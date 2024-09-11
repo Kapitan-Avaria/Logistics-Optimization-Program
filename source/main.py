@@ -24,31 +24,28 @@ def index():
         False: "red",
         None: "gray"
     }
-    return render_template(
-        "index.html",
-        title='Главная',
-        orders=vw.orders,
-        vehicles=vw.vehicles,
-        url_1c=cfg.URL_1C,
-        status=status_texts[vw.status_1c],
-        color=status_colors[vw.status_1c]
-    )
+    context = {
+        "title": "Главная",
+        "orders": vw.orders,
+        "vehicles": vw.vehicles,
+        "url_1c": cfg.URL_1C,
+        "status": status_texts[vw.status_1c],
+        "color": status_colors[vw.status_1c]
+    }
+    return render_template("index.html", **context)
 
 
 @app.route('/edit_config', methods=['GET', 'POST'])
 def edit_config():
     if request.method == 'GET':
-        return render_template(
-            "edit_config.html",
-            title='Настроить конфигурацию',
-            cfg=cfg.load_dict()
-        )
+        context = {
+            "title": "Настроить конфигурацию",
+            "cfg": cfg.load_dict()
+        }
+        return render_template("edit_config.html", **context)
     elif request.method == 'POST':
         cfg_dict = cfg.load_dict()
         for k, v in cfg_dict.items():
-            # if type(cfg.__getattr__(k)) is bool:
-            #     v = True if v == 'on' else False
-            #     print(k, v)
             if type(v) is bool:
                 new_v = False
                 if request.form.get(k):
@@ -66,22 +63,19 @@ def edit_config():
         return redirect(request.referrer)
 
 
-@app.route('/edit_orders')
+@app.route('/edit_orders', methods=['GET', 'POST'])
 def edit_orders():
-    return render_template(
-        "edit_orders.html",
-        title='Редактировать заказы',
-        orders=vw.orders,
-        clients=vw.clients
-    )
-
-
-@app.route('/update_orders', methods=['POST'])
-def update_orders():
-    orders = dict()
-    if request.method == 'POST':
+    if request.method == 'GET':
+        context = {
+            "title": "Редактировать заказы",
+            "orders": vw.orders,
+            "clients": vw.clients
+        }
+        return render_template("edit_orders.html", **context)
+    elif request.method == 'POST':
+        orders = dict()
         for k, v in request.form.items():
-            if k == 'update_orders':
+            if k == 'edit_orders':
                 continue
             if int(k.split('_')[-1]) not in orders.keys():
                 orders[int(k.split('_')[-1])] = dict()
@@ -111,29 +105,26 @@ def update_orders():
             if "delivery_time_end_" in k:
                 order_id = int(k.removeprefix('delivery_time_end_'))
                 orders[order_id]['delivery_time_end'] = v
-    upsert_orders(list(orders.values()))
-    vw.load_data_from_db()
-    return redirect(request.referrer)
+        upsert_orders(list(orders.values()))
+        vw.load_data_from_db()
+        return redirect(request.referrer)
 
 
-@app.route('/edit_delivery_zones')
+@app.route('/edit_delivery_zones', methods=['GET', 'POST'])
 def edit_delivery_zones():
-    return render_template(
-        "edit_delivery_zones.html",
-        title='Редактировать зоны доставки',
-        delivery_zones=list(vw.delivery_zones.values()),
-        depot_address=cfg.DEPOT_ADDRESS
-    )
-
-
-@app.route('/update_delivery_zones', methods=['POST'])
-def update_delivery_zones():
-    delivery_zones = dict()
-    if request.method == 'POST':
+    if request.method == 'GET':
+        context = {
+            "title": "Редактировать зоны доставки",
+            "delivery_zones": list(vw.delivery_zones.values()),
+            "depot_address": cfg.DEPOT_ADDRESS
+        }
+        return render_template("edit_delivery_zones.html", **context)
+    elif request.method == 'POST':
+        delivery_zones = dict()
         for k, v in request.form.items():
-            if k == 'update_delivery_zones':
+            if k == 'edit_delivery_zones':
                 continue
-            if k.split('_')[-1] not in delivery_zones.keys():
+            if int(k.split('_')[-1]) not in delivery_zones.keys():
                 delivery_zones[int(k.split('_')[-1])] = dict()
 
             if "name_" in k:
@@ -142,26 +133,23 @@ def update_delivery_zones():
             if "type_" in k:
                 zone_id = int(k.removeprefix('type_'))
                 delivery_zones[zone_id]["type"] = v
-    upsert_delivery_zones(list(delivery_zones.values()))
-    vw.load_data_from_db()
-    return redirect(request.referrer)
+        upsert_delivery_zones(list(delivery_zones.values()))
+        vw.load_data_from_db()
+        return redirect(request.referrer)
 
 
-@app.route('/edit_vehicles')
+@app.route('/edit_vehicles', methods=['GET', 'POST'])
 def edit_vehicles():
-    return render_template(
-        "edit_vehicles.html",
-        title='Редактировать машины',
-        vehicles=vw.vehicles
-    )
-
-
-@app.route('/update_vehicles', methods=['POST'])
-def update_vehicles():
-    vehicles = dict()
-    if request.method == 'POST':
+    if request.method == 'GET':
+        context = {
+            "title": "Редактировать машины",
+            "vehicles": vw.vehicles
+        }
+        return render_template("edit_vehicles.html", **context)
+    elif request.method == 'POST':
+        vehicles = dict()
         for k, v in request.form.items():
-            if k == 'update_vehicles':
+            if k == 'edit_vehicles':
                 continue
             if k.split('_')[-1] not in vehicles.keys():
                 vehicles[int(k.split('_')[-1])] = dict()
@@ -172,9 +160,9 @@ def update_vehicles():
             if "category_" in k:
                 vehicle_id = int(k.removeprefix('type_'))
                 vehicles[vehicle_id]["category"] = v
-    upsert_vehicles(list(vehicles.values()))
-    vw.load_data_from_db()
-    return redirect(request.referrer)
+        upsert_vehicles(list(vehicles.values()))
+        vw.load_data_from_db()
+        return redirect(request.referrer)
 
 
 @app.route('/build_routes')
