@@ -25,6 +25,8 @@ class VRPWrapper:
 
         self.unassigned_vehicles = []
         self.unassigned_orders = []
+        self.selected_vehicles = []
+        self.selected_orders = []
         self.approved_routes = []
         self.actual_volume_ratio = 1.  # A coefficient to diminish volume of the vehicle
         self.request_coords_on_load = True
@@ -84,6 +86,9 @@ class VRPWrapper:
                 converted_routes.append(converted_route)
             return converted_routes
 
+        self.selected_vehicles = []
+        self.selected_orders = []
+
         for i, v in enumerate(self.vehicles):
             self.vehicles[i]["routes"] = []
 
@@ -95,6 +100,7 @@ class VRPWrapper:
 
             for v_id in vehicles_ids:
                 i = vehicle_index_from_vehicle_id(v_id)
+                self.selected_vehicles.append(i)
                 if self.vehicles[i]["category"] == "B":
                     vehicles_indices_b.append(i)
                 elif self.vehicles[i]["category"] == "C":
@@ -102,6 +108,7 @@ class VRPWrapper:
 
             for o_id in orders_ids:
                 i = order_index_from_order_id(o_id)
+                self.selected_orders.append(i)
                 # self.unassigned_orders.remove(i)
                 if self.addresses[i + 1]["delivery_zone_type"] == "B":
                     addresses_indices_b.append(i + 1)
@@ -173,15 +180,23 @@ class VRPWrapper:
         vehicles = [v for v in self.vehicles if len(v["routes"]) > 0]
         vehicles = [v for v in vehicles if len(v["routes"][0]) > 0]
 
-        # Add markers of all locations to the map
+        # Add markers of all unvisited locations to the map
         for i in range(1, len(self.locations)):
             if i-1 in self.unassigned_orders:
-                folium.Marker(
-                    location=[self.locations[i][1], self.locations[i][0]],
-                    tooltip=f"Адрес: {self.addresses[i]['string_address']},<br>"
-                            f"Временное окно: [{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}]",
-                    icon=folium.Icon(color="blue", icon="info-sign")
-                ).add_to(self.map)
+                if i-1 in self.selected_orders:
+                    folium.Marker(
+                        location=[self.locations[i][1], self.locations[i][0]],
+                        tooltip=f"Адрес: {self.addresses[i]['string_address']},<br>"
+                                f"Временное окно: [{self.orders[i - 1]['delivery_time_start']}, {self.orders[i - 1]['delivery_time_end']}]",
+                        icon=folium.Icon(color="orange", icon="exclamation-sign")
+                    ).add_to(self.map)
+                else:
+                    folium.Marker(
+                        location=[self.locations[i][1], self.locations[i][0]],
+                        tooltip=f"Адрес: {self.addresses[i]['string_address']},<br>"
+                                f"Временное окно: [{self.orders[i-1]['delivery_time_start']}, {self.orders[i-1]['delivery_time_end']}]",
+                        icon=folium.Icon(color="blue", icon="info-sign")
+                    ).add_to(self.map)
         # Add polyline and green markers for each route to the map
         for r, route in enumerate(routes):
             route_group = folium.FeatureGroup(
