@@ -20,6 +20,7 @@ class Config:
             return os.path.join(base_path, relative_path)
 
         self.path = resource_path('data/config.cfg')
+        self.path_loc = resource_path('data/config_loc_ru.cfg')
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
@@ -45,3 +46,8 @@ class Config:
         with open(self.path, 'r', encoding='utf8') as f:
             config = json.load(f)
             return config
+
+    def load_dict_loc(self):
+        with open(self.path_loc, 'r', encoding='utf8') as f:
+            config_loc = json.load(f)
+            return config_loc

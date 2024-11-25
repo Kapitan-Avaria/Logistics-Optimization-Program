@@ -40,7 +40,8 @@ def edit_config():
     if request.method == 'GET':
         context = {
             "title": "Настроить конфигурацию",
-            "cfg": cfg.load_dict()
+            "cfg": cfg.load_dict(),
+            "cfg_loc": cfg.load_dict_loc()
         }
         return render_template("edit_config.html", **context)
     elif request.method == 'POST':
