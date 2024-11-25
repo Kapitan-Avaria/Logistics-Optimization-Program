@@ -27,3 +27,6 @@ table {
     border: 1px solid rgb(200 200 200);
     padding: 0px 10px;
 }
+
+.order-delivered { background-color: #90EE90; }
+.order-selected { background-color: #FFD700; }

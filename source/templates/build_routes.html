@@ -84,7 +84,7 @@
                         </thead>
                         <tbody>
                             {% for o in orders %}
-                            <tr>
+                            <tr {{ 'class=order-delivered' if o['id'] in delivered_orders else 'class=order-selected' if o['id'] in selected_but_not_delivered else '' }}>
                                 <td><input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}"
                                    checked>
                                     <label for="select_order_{{o['id']}}">{{ o["number"] }}</label></td>
@@ -101,9 +101,9 @@
 
         <div class="half">
             {{ folium_map|safe }}
-            <p>Всего заказов: </p>
-            <p>Пропущено: </p>
-            <p>Успешно распределено: m из n</p>
+            <p>Всего заказов: {{ orders|length }}</p>
+            <p>Пропущено: {{ orders|length - selected_orders|length }}</p>
+            <p>Успешно распределено: {{ delivered_orders|length }} из {{ selected_orders|length }}</p>
             <p>Не распределено: </p>
         </div>
     </section>

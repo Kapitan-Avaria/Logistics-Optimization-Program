@@ -171,12 +171,17 @@ def build_routes():
     vw.draw_map()
     iframe = vw.map.get_root()._repr_html_()
 
+    print(vw.selected_but_not_delivered)
+    print(vw.delivered_orders)
     return render_template(
         "build_routes.html",
         title='Построение маршрутов',
         vehicles=vw.vehicles,
         orders=vw.orders,
         clients=vw.clients,
+        delivered_orders=vw.delivered_orders,
+        selected_orders=[o["id"] for o in vw.orders if vw.orders.index(o) in vw.selected_orders],
+        selected_but_not_delivered=vw.selected_but_not_delivered,
         folium_map=iframe,
         shift_start_b=cfg.DEFAULT_SHIFT_START_B,
         shift_start_c=cfg.DEFAULT_SHIFT_START_C,
@@ -212,6 +217,10 @@ def run_vrp():
 
         vw.run(vehicles_ids, orders_ids)
         vw.export_routes()
+        # Update selected but not delivered orders
+        vw.selected_but_not_delivered = orders_ids.copy()
+        # Remove delivered orders from selected_but_not_delivered
+        vw.selected_but_not_delivered = [order_id for order_id in vw.selected_but_not_delivered if order_id not in vw.delivered_orders]
     return redirect('/build_routes')
 
 

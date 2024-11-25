@@ -16,6 +16,8 @@ class VRPWrapper:
         self.status_1c = None
 
         self.orders = []
+        self.delivered_orders = []
+        self.selected_but_not_delivered = []
         self.products = dict()
         self.available_vehicles = []
         self.vehicles = []
@@ -82,12 +84,17 @@ class VRPWrapper:
                             'load': point[2],
                             'wait_time': point[3]
                         })
-                        self.unassigned_orders.remove(self.orders.index(self.orders[locations_indices[point[0] - 1]]))
+                        try:
+                            self.unassigned_orders.remove(self.orders.index(self.orders[locations_indices[point[0] - 1]]))
+                        except Exception:
+                            pass
+                        self.delivered_orders.append(self.orders[locations_indices[point[0] - 1]]["id"])
                 converted_routes.append(converted_route)
             return converted_routes
 
         self.selected_vehicles = []
         self.selected_orders = []
+        self.selected_but_not_delivered = self.selected_orders.copy()
 
         for i, v in enumerate(self.vehicles):
             self.vehicles[i]["routes"] = []
