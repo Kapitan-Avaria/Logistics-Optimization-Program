@@ -1,0 +1,57 @@
+<table class="vehicles-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Машина</th>
+            <th>Категория</th>
+            <th>Объем</th>
+            <th>Начало смены</th>
+            <th>Длительность смены</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for v in vehicles %}
+        <tr>
+            <td>{{ v["id"] }}</td>
+            <td><input type="checkbox" name="select_vehicle_{{v['id']}}" id="select_vehicle_{{v['id']}}" checked>
+                <label for="select_vehicle_{{v['id']}}">{{ v["name"] }}</label></td>
+            <td>{{ v["category"] }}</td>
+            <td>{{ v["dimensions"]["volume"] }}</td>
+            <td><input type="time" name="work_start_{{v['id']}}" id="work_start_{{v['id']}}" value="{{shift_start_b if v['category'] == 'B' else shift_start_c}}"></td>
+            <td><input type="time" name="work_duration_{{v['id']}}" id="work_duration_{{v['id']}}" value="{{shift_dur_b if v['category'] == 'B' else shift_dur_c}}"></td>
+        </tr>
+        {% for route in v["routes"] %}
+        <tr>
+            <td colspan="6">
+                <details>
+                    <summary>Маршрут</summary>
+                    <table class="inline-routes-table">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Адрес</th>
+                                <th>Время прибытия</th>
+                                <th>Время ожидания</th>
+                                <th>Итоговая загрузка</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for loc in route %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ loc["address"]["string_address"] }}</td>
+                                <td>{{ loc["arrival_time"] }}</td>
+                                <td>{{ loc["wait_time"] }}</td>
+                                <td>{{ loc["load"] }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </details>
+            </td>
+        </tr>
+        {% endfor %}
+        {% endfor %}
+
+    </tbody>
+</table>

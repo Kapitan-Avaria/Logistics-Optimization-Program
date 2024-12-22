@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<main>
+    <form action="/load_data" method="post">
+        <button name="load_data" value="">Обновить данные</button>
+    </form>
+    <section class="container">
+        <div class="half">
+            <form action="/run_vrp" method="post">
+                <button name="run_vrp" value="">Построить маршруты</button>
+
+                <fieldset style="overflow-y:scroll; height: 256px;">
+                    <legend>Выберите машины, которые будут участвовать в распределении</legend>
+                    {% include 'table_vehicles.html' %}
+                </fieldset>
+
+                <fieldset style="overflow-y:scroll; height: 256px;">
+                    <legend>Выберите заказы, которые будут участвовать в распределении</legend>
+                    {% include 'table_orders.html' %}
+                </fieldset>
+            </form>
+        </div>
+
+        <div class="half">
+            {{ folium_map|safe }}
+            <p>Всего заказов: {{ orders|length }}</p>
+            <p>Пропущено: {{ orders|length - selected_orders|length }}</p>
+            <p>Успешно распределено: {{ delivered_orders|length }} из {{ selected_orders|length }}</p>
+            <p>Не распределено: </p>
+        </div>
+    </section>
+</main>
+{% endblock %}

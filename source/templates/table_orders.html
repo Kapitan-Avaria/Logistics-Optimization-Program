@@ -1,0 +1,22 @@
+<table class="orders-table">
+    <thead>
+        <tr>
+            <th>Заказ</th>
+            <th>Клиент</th>
+            <th>Адрес</th>
+            <th>Объем</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for o in orders %}
+        <tr {{ 'class=order-delivered' if o['id'] in delivered_orders else 'class=order-selected' if o['id'] in selected_but_not_delivered else '' }}>
+            <td><input type="checkbox" name="select_order_{{o['id']}}" id="select_order_{{o['id']}}"
+               checked>
+                <label for="select_order_{{o['id']}}">{{ o["number"] }}</label></td>
+            <td>{{ clients[o["client_id"]]["name"] }}</td>
+            <td>{{ o["address"]["string_address"] }}</td>
+            <td>{{ o["volume"] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

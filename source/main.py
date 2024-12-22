@@ -32,7 +32,7 @@ def index():
         "status": status_texts[vw.status_1c],
         "color": status_colors[vw.status_1c]
     }
-    return render_template("index.html", **context)
+    return render_template("page_index.html", **context)
 
 
 @app.route('/edit_config', methods=['GET', 'POST'])
@@ -43,7 +43,7 @@ def edit_config():
             "cfg": cfg.load_dict(),
             "cfg_loc": cfg.load_dict_loc()
         }
-        return render_template("edit_config.html", **context)
+        return render_template("page_edit_config.html", **context)
     elif request.method == 'POST':
         cfg_dict = cfg.load_dict()
         for k, v in cfg_dict.items():
@@ -72,7 +72,7 @@ def edit_orders():
             "orders": vw.orders,
             "clients": vw.clients
         }
-        return render_template("edit_orders.html", **context)
+        return render_template("page_edit_orders.html", **context)
     elif request.method == 'POST':
         orders = dict()
         for k, v in request.form.items():
@@ -119,7 +119,7 @@ def edit_delivery_zones():
             "delivery_zones": list(vw.delivery_zones.values()),
             "depot_address": cfg.DEPOT_ADDRESS
         }
-        return render_template("edit_delivery_zones.html", **context)
+        return render_template("page_edit_delivery_zones.html", **context)
     elif request.method == 'POST':
         delivery_zones = dict()
         for k, v in request.form.items():
@@ -146,7 +146,7 @@ def edit_vehicles():
             "title": "Редактировать машины",
             "vehicles": vw.vehicles
         }
-        return render_template("edit_vehicles.html", **context)
+        return render_template("page_edit_vehicles.html", **context)
     elif request.method == 'POST':
         vehicles = dict()
         for k, v in request.form.items():
@@ -174,7 +174,7 @@ def build_routes():
     print(vw.selected_but_not_delivered)
     print(vw.delivered_orders)
     return render_template(
-        "build_routes.html",
+        "page_build_routes.html",
         title='Построение маршрутов',
         vehicles=vw.vehicles,
         orders=vw.orders,
