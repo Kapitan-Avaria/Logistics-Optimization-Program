@@ -32,7 +32,7 @@ class CVRPTW:
         return float(self.calc_base_distance(from_node, to_node) / 1000)  # Converting to kilometers
 
     def time_dependent_travel_time(self, from_node, to_node, current_time):
-        base_distance = self.travel_distance(from_node, to_node)  # Converting to kilometers
+        base_distance = self.travel_distance(from_node, to_node)
         base_velocity = 30  # km/h
         min_velocity = 11
 
