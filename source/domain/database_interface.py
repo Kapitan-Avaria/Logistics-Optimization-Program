@@ -13,6 +13,9 @@ from source.domain.entities.vehicle import Vehicle
 
 
 class DatabaseInterface(ABC):
+    @abstractmethod
+    def create_tables(self):
+        pass
 
     @abstractmethod
     def insert_address(self, address: Address):

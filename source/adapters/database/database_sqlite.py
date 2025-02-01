@@ -127,8 +127,12 @@ order_products = Table(
 
 class DatabaseSQLiteAdapter(DatabaseInterface):
     def __init__(self, database_uri):
+        self.metadata = metadata
         engine = create_engine(database_uri)
         self.__connection = engine.connect()
+    
+    def create_tables(self):
+        self.metadata.create_all(self.__connection)
 
     def insert_address(self, address: Address):
         query = addresses.insert().values(
