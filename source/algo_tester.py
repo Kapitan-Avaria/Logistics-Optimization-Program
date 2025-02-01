@@ -6,7 +6,7 @@ from source.solvers.greedy_solver import GreedySolver
 from source.solvers.ant_colony_solver import AntColonySolver
 from time import time
 import pandas as pd
-from source.loggers.logger import Logger
+from source.adapters.loggers.logger import Logger
 
 
 def generate_test_case(
