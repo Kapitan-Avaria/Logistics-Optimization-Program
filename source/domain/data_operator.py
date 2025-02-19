@@ -77,5 +77,5 @@ class DataOperator:
             self.db.insert_segment_statistics(SegmentStatistics(**segment_data))
 
     def from_db(self):
-        """Loads and builds the problem data from the db"""
+        """Loads and builds the transportation problem data from the db"""
         return

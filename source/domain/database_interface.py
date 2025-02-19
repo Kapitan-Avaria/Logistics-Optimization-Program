@@ -58,6 +58,10 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
+    def upsert_delivery_zone(self, delivery_zone: DeliveryZone):
+        pass
+
+    @abstractmethod
     def get_delivery_zone(self, delivery_zone_id: int) -> DeliveryZone:
         pass
 

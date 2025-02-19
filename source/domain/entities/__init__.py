@@ -8,3 +8,17 @@ from source.domain.entities.route import Route
 from source.domain.entities.segment import Segment
 from source.domain.entities.segment_statistics import SegmentStatistics
 from source.domain.entities.vehicle import Vehicle
+from source.domain.entities.problem import Problem
+__all__ = [
+    "Address",
+    "Client",
+    "DeliveryZone",
+    "Order",
+    "OrderProduct",
+    "Product",
+    "Route",
+    "Segment",
+    "SegmentStatistics",
+    "Vehicle",
+    "Problem"
+]
