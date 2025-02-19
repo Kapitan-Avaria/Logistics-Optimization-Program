@@ -1,10 +1,13 @@
 from flask import Blueprint, render_template, redirect, request
 from config import Config
+from source.domain.data_operator import DataOperator
+from source.domain.map_drawer_interface import MapDrawer
+from source.domain.entities import *
 
 cfg = Config()
 
 
-def create_app_blueprint():
+def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
     app = Blueprint('app', __name__)
 
     @app.route('/')
@@ -102,8 +105,10 @@ def create_app_blueprint():
                 if "delivery_time_end_" in k:
                     order_id = int(k.removeprefix('delivery_time_end_'))
                     orders[order_id]['delivery_time_end'] = v
-            upsert_orders(list(orders.values()))
-            vw.load_data_from_db()
+            for o, order in enumerate(orders.values()):
+                dataop.db.upsert_order(Order(**{k: orders[o][k] for k in Order.__annotations__.keys()}))
+            # upsert_orders(list(orders.values()))
+            # vw.load_data_from_db()
             return redirect(request.referrer)
 
 
@@ -130,8 +135,12 @@ def create_app_blueprint():
                 if "type_" in k:
                     zone_id = int(k.removeprefix('type_'))
                     delivery_zones[zone_id]["type"] = v
-            upsert_delivery_zones(list(delivery_zones.values()))
-            vw.load_data_from_db()
+            for z, zone in enumerate(delivery_zones.values()):
+                dataop.db.upsert_delivery_zone(
+                    DeliveryZone(**{k: delivery_zones[z][k] for k in DeliveryZone.__annotations__.keys()})
+                )
+            # upsert_delivery_zones(list(delivery_zones.values()))
+            # vw.load_data_from_db()
             return redirect(request.referrer)
 
 
@@ -157,15 +166,17 @@ def create_app_blueprint():
                 if "category_" in k:
                     vehicle_id = int(k.removeprefix('type_'))
                     vehicles[vehicle_id]["category"] = v
-            upsert_vehicles(list(vehicles.values()))
-            vw.load_data_from_db()
+            for v, vehicle in enumerate(vehicles.values()):
+                dataop.db.upsert_vehicle(Vehicle(**{k: vehicles[v][k] for k in Vehicle.__annotations__.keys()}))
+            # upsert_vehicles(list(vehicles.values()))
+            # vw.load_data_from_db()
             return redirect(request.referrer)
 
 
     @app.route('/build_routes')
     def build_routes():
-        vw.draw_map()
-        iframe = vw.map.get_root()._repr_html_()
+        map_drawer.redraw_map()
+        iframe = map_drawer.get_map_iframe()
 
         print(vw.selected_but_not_delivered)
         print(vw.delivered_orders)
