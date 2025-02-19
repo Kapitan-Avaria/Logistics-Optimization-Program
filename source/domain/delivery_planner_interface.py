@@ -2,10 +2,18 @@ from abc import ABC, abstractmethod
 
 
 class DeliveryPlannerInterface(ABC):
+    # @abstractmethod
+    # def request_data_from_api(self, api_url: str):
+    #     pass
+
     @abstractmethod
-    def request_data_from_api(self, api_url: str):
+    def export_routes(self):
         pass
 
     @abstractmethod
-    def load_data_from_db(self):
+    def build_routes(self):
+        pass
+
+    @abstractmethod
+    def edit_route(self):
         pass
