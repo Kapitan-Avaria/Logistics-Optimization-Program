@@ -7,7 +7,7 @@ class BusinessDataInterface(ABC):
         pass
 
     @abstractmethod
-    def get_depot(self):
+    def get_depot(self, depot_id):
         pass
 
     @abstractmethod
