@@ -3,4 +3,9 @@ from dataclasses import dataclass
 
 @dataclass
 class Problem:
-    pass
+    orders: list
+    products: dict
+    delivery_zones: dict
+    vehicles: list
+    clients: list
+

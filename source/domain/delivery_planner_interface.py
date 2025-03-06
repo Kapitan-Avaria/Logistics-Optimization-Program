@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
+from source.domain.entities import Problem, Route
 
 
 class DeliveryPlannerInterface(ABC):
-    # @abstractmethod
-    # def request_data_from_api(self, api_url: str):
-    #     pass
+    def __init__(self):
+        self.problem: Problem = None
 
     @abstractmethod
     def export_routes(self):

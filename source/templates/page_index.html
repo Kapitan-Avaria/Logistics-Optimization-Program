@@ -6,7 +6,7 @@
     <p>Машин в базе: {{vehicles|length}}</p>
     <p>Последнее подключение к 1C: <span style="color: {{ color }}">{{ status }}</span></p>
     <form action="/load_data" method="post">
-        <input type="url" name="url_1c_input" id="url_1c_input" value="{{ url_1c }}">
+        <input type="url" name="url_business_api_input" id="url_business_api_input" value="{{ url_business_api }}">
         <button name="load_data" value="">Загрузить данные из 1C</button>
     </form>
     <a href="/edit_config">

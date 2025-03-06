@@ -1,14 +1,18 @@
-from flask import Blueprint, render_template, redirect, request
-from config import Config
+from flask import Blueprint, render_template, redirect, request, current_app
 from source.domain.data_operator import DataOperator
 from source.domain.map_drawer_interface import MapDrawer
+from source.domain.delivery_planner_interface import DeliveryPlannerInterface
 from source.domain.entities import *
 
-cfg = Config()
+# cfg = Config()
 
 
-def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
+def create_app_blueprint():
     app = Blueprint('app', __name__)
+    dataop: DataOperator = current_app.config["DATA_OPERATOR"]
+    map_drawer: MapDrawer = current_app.config["MAP_DRAWER"]
+    dp: DeliveryPlannerInterface = current_app.config["DELIVERY_PLANNER"]
+    # cur_problem: Problem = current_app.config["CURRENT_PROBLEM"]
 
     @app.route('/')
     @app.route('/index')
@@ -25,14 +29,13 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
         }
         context = {
             "title": "Главная",
-            "orders": vw.orders,
-            "vehicles": vw.vehicles,
-            "url_1c": cfg.URL_1C,
-            "status": status_texts[vw.status_1c],
-            "color": status_colors[vw.status_1c]
+            "orders": dp.problem.orders,
+            "vehicles": dp.problem.vehicles,
+            "url_business_api": current_app.config["URL_BUSINESS_API"],
+            # "status": status_texts[dataop.status_1c],
+            # "color": status_colors[dataop.status_1c]
         }
         return render_template("page_index.html", **context)
-
 
     @app.route('/edit_config', methods=['GET', 'POST'])
     def edit_config():
@@ -58,18 +61,17 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
                     new_v = request.form.get(k)
                 if new_v is None:
                     continue
-                cfg.__setattr__(k, new_v)
-            vw.load_data_from_db()
+                current_app.config[k] = new_v
+            dataop.from_db()
             return redirect(request.referrer)
-
 
     @app.route('/edit_orders', methods=['GET', 'POST'])
     def edit_orders():
         if request.method == 'GET':
             context = {
                 "title": "Редактировать заказы",
-                "orders": vw.orders,
-                "clients": vw.clients
+                "orders": dp.problem.orders,
+                "clients": dp.problem.clients
             }
             return render_template("page_edit_orders.html", **context)
         elif request.method == 'POST':
@@ -111,14 +113,13 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
             # vw.load_data_from_db()
             return redirect(request.referrer)
 
-
     @app.route('/edit_delivery_zones', methods=['GET', 'POST'])
     def edit_delivery_zones():
         if request.method == 'GET':
             context = {
                 "title": "Редактировать зоны доставки",
-                "delivery_zones": list(vw.delivery_zones.values()),
-                "depot_address": cfg.DEPOT_ADDRESS
+                "delivery_zones": list(dp.problem.delivery_zones.values()),
+                "depot_address": current_app.config["DEPOT_ADDRESS"]
             }
             return render_template("page_edit_delivery_zones.html", **context)
         elif request.method == 'POST':
@@ -149,7 +150,7 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
         if request.method == 'GET':
             context = {
                 "title": "Редактировать машины",
-                "vehicles": vw.vehicles
+                "vehicles": dp.problem.vehicles
             }
             return render_template("page_edit_vehicles.html", **context)
         elif request.method == 'POST':
@@ -178,32 +179,32 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
         map_drawer.redraw_map()
         iframe = map_drawer.get_map_iframe()
 
-        print(vw.selected_but_not_delivered)
-        print(vw.delivered_orders)
+        # print(vw.selected_but_not_delivered)
+        # print(vw.delivered_orders)
         return render_template(
             "page_build_routes.html",
             title='Построение маршрутов',
-            vehicles=vw.vehicles,
-            orders=vw.orders,
-            clients=vw.clients,
-            delivered_orders=vw.delivered_orders,
-            selected_orders=[o["id"] for o in vw.orders if vw.orders.index(o) in vw.selected_orders],
-            selected_but_not_delivered=vw.selected_but_not_delivered,
+            vehicles=dp.problem.vehicles,
+            orders=dp.problem.orders,
+            clients=dp.problem.clients,
+            # delivered_orders=vw.delivered_orders,
+            # selected_orders=[o["id"] for o in dp.problem.orders if vw.orders.index(o) in vw.selected_orders],
+            # selected_but_not_delivered=vw.selected_but_not_delivered,
             folium_map=iframe,
-            shift_start_b=cfg.DEFAULT_SHIFT_START_B,
-            shift_start_c=cfg.DEFAULT_SHIFT_START_C,
-            shift_dur_b=cfg.DEFAULT_SHIFT_DURATION_B,
-            shift_dur_c=cfg.DEFAULT_SHIFT_DURATION_C,
+            shift_start_b=current_app.config["DEFAULT_SHIFT_START_B"],
+            shift_start_c=current_app.config["DEFAULT_SHIFT_START_C"],
+            shift_dur_b=current_app.config["DEFAULT_SHIFT_DURATION_B"],
+            shift_dur_c=current_app.config["DEFAULT_SHIFT_DURATION_C"],
         )
 
 
     @app.route('/load_data',  methods=['POST'])
     def load_data_from_db():
         if request.method == 'POST':
-            if 'url_1c_input' in request.form.keys() and request.form['url_1c_input'] != '':
-                cfg.URL_1C = request.form['url_1c_input']
-            vw.request_data_from_1c(db_is_empty, cfg.URL_1C)
-            vw.load_data_from_db()
+            if 'url_business_api_input' in request.form.keys() and request.form['url_business_api_input'] != '':
+                current_app.config["URL_BUSINESS_API"] = request.form['url_business_api_input']
+            dataop.load_data_from_business_to_db()
+            dataop.from_db()
         return redirect(request.referrer)
 
 
@@ -222,12 +223,12 @@ def create_app_blueprint(dataop: DataOperator, map_drawer: MapDrawer):
                     if v == 'on':
                         orders_ids.append(order_id)
 
-            vw.run(vehicles_ids, orders_ids)
-            vw.export_routes()
-            # Update selected but not delivered orders
-            vw.selected_but_not_delivered = orders_ids.copy()
-            # Remove delivered orders from selected_but_not_delivered
-            vw.selected_but_not_delivered = [order_id for order_id in vw.selected_but_not_delivered if order_id not in vw.delivered_orders]
+            # vw.run(vehicles_ids, orders_ids)
+            # vw.export_routes()
+            # # Update selected but not delivered orders
+            # vw.selected_but_not_delivered = orders_ids.copy()
+            # # Remove delivered orders from selected_but_not_delivered
+            # vw.selected_but_not_delivered = [order_id for order_id in vw.selected_but_not_delivered if order_id not in vw.delivered_orders]
         return redirect('/build_routes')
 
     return app
