@@ -18,7 +18,7 @@ class DataOperator:
         self.geo_data = geo_data
         self.routing_data = routing_data
 
-    def load_data_from_business_to_db(self, start_date, end_date):
+    def load_data_from_business_to_db(self, start_date=None, end_date=None):
         """Request all the products, vehicles and available orders with all corresponding data
         from the business data source and load to the db"""
 
