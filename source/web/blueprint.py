@@ -12,7 +12,6 @@ def create_app_blueprint():
     dataop: DataOperator = current_app.config["DATA_OPERATOR"]
     map_drawer: MapDrawer = current_app.config["MAP_DRAWER"]
     dp: DeliveryPlannerInterface = current_app.config["DELIVERY_PLANNER"]
-    # cur_problem: Problem = current_app.config["CURRENT_PROBLEM"]
 
     @app.route('/')
     @app.route('/index')
@@ -29,8 +28,8 @@ def create_app_blueprint():
         }
         context = {
             "title": "Главная",
-            "orders": dp.problem.orders,
-            "vehicles": dp.problem.vehicles,
+            "orders": dataop.db.get_orders(),
+            "vehicles": dataop.db.get_vehicles(),
             "url_business_api": current_app.config["URL_BUSINESS_API"],
             # "status": status_texts[dataop.status_1c],
             # "color": status_colors[dataop.status_1c]
@@ -42,12 +41,12 @@ def create_app_blueprint():
         if request.method == 'GET':
             context = {
                 "title": "Настроить конфигурацию",
-                "cfg": cfg.load_dict(),
-                "cfg_loc": cfg.load_dict_loc()
+                "cfg": current_app.config.__dict__,
+                # "cfg_loc": cfg.load_dict_loc()
             }
             return render_template("page_edit_config.html", **context)
         elif request.method == 'POST':
-            cfg_dict = cfg.load_dict()
+            cfg_dict = current_app.config.__dict__
             for k, v in cfg_dict.items():
                 if type(v) is bool:
                     new_v = False
@@ -70,8 +69,8 @@ def create_app_blueprint():
         if request.method == 'GET':
             context = {
                 "title": "Редактировать заказы",
-                "orders": dp.problem.orders,
-                "clients": dp.problem.clients
+                "orders": dataop.db.get_orders(),
+                "clients": dataop.db.get_clients()
             }
             return render_template("page_edit_orders.html", **context)
         elif request.method == 'POST':
@@ -118,7 +117,7 @@ def create_app_blueprint():
         if request.method == 'GET':
             context = {
                 "title": "Редактировать зоны доставки",
-                "delivery_zones": list(dp.problem.delivery_zones.values()),
+                "delivery_zones": dataop.db.get_delivery_zones(),
                 "depot_address": current_app.config["DEPOT_ADDRESS"]
             }
             return render_template("page_edit_delivery_zones.html", **context)
@@ -150,7 +149,7 @@ def create_app_blueprint():
         if request.method == 'GET':
             context = {
                 "title": "Редактировать машины",
-                "vehicles": dp.problem.vehicles
+                "vehicles": dataop.db.get_vehicles()
             }
             return render_template("page_edit_vehicles.html", **context)
         elif request.method == 'POST':
@@ -184,12 +183,12 @@ def create_app_blueprint():
         return render_template(
             "page_build_routes.html",
             title='Построение маршрутов',
-            vehicles=dp.problem.vehicles,
-            orders=dp.problem.orders,
-            clients=dp.problem.clients,
-            # delivered_orders=vw.delivered_orders,
-            # selected_orders=[o["id"] for o in dp.problem.orders if vw.orders.index(o) in vw.selected_orders],
-            # selected_but_not_delivered=vw.selected_but_not_delivered,
+            vehicles=dataop.db.get_vehicles(),
+            orders=dataop.db.get_orders(),
+            clients=dataop.db.get_clients(),
+            delivered_orders=dataop.db.get_orders(status="delivered"),
+            selected_orders=dataop.db.get_orders(status="selected"),
+            selected_but_not_delivered=dataop.db.get_orders(status="selected_but_not_delivered"),
             folium_map=iframe,
             shift_start_b=current_app.config["DEFAULT_SHIFT_START_B"],
             shift_start_c=current_app.config["DEFAULT_SHIFT_START_C"],

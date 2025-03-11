@@ -17,7 +17,7 @@
             <tbody>
                 {% for k, v in cfg.items() %}
                 <tr>
-                    <td>{{ cfg_loc[k] }}</td>
+                    <td>{{ k }}</td>
                     <td>
                     {% if v is string %}
                         <input type="text" name="{{ k }}" value="{{ v }}">

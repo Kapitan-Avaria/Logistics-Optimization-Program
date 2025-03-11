@@ -78,4 +78,11 @@ class DataOperator:
 
     def from_db(self):
         """Loads and builds the transportation problem data from the db"""
+        locations: list
+        demands: list
+        volumes: list
+        time_windows: list
+        vehicle_capacities: list
+        vehicle_time_windows: list
+
         return

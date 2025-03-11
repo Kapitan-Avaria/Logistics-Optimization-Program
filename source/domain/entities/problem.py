@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 @dataclass
 class Problem:
-    orders: list
-    products: dict
-    delivery_zones: dict
-    vehicles: list
-    clients: list
+    locations: list
+    demands: list
+    volumes: list
+    time_windows: list
+    vehicle_capacities: list
+    vehicle_time_windows: list
+
 
