@@ -1,5 +1,8 @@
+import datetime
+
 from sqlalchemy import (
-    create_engine, MetaData, Table, Column, Integer, Text, Float, Date, Time, JSON, ForeignKey, UniqueConstraint
+    create_engine, MetaData, Table, Column, Integer, Text, Float, Date, Time, JSON, ForeignKey,
+    UniqueConstraint, or_, not_, select
 )
 
 from source.domain.database_interface import DatabaseInterface
@@ -129,9 +132,10 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
     # ***************************
     # General methods
     # ***************************
-    def __init__(self, database_uri):
+    def __init__(self, db_path):
+
         self.metadata = metadata
-        engine = create_engine(database_uri)
+        engine = create_engine(f"sqlite+pysqlite:///{db_path}")
         self.__connection = engine.connect()
     
     def create_tables(self):
@@ -173,15 +177,15 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         row = cursor.fetchone()
         return Client(**row)
 
+    def get_clients(self) -> list[Client]:
+        query = clients.select()
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Client(**row) for row in rows]
+
     # ***************************
     # Delivery Zone
     # ***************************
-    def get_delivery_zone(self, delivery_zone_id: int):
-        query = delivery_zones.select().where(delivery_zones.c.id == delivery_zone_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return DeliveryZone(**row)
-
     def insert_delivery_zone(self, delivery_zone: DeliveryZone):
         query = delivery_zones.insert().values(
             name=delivery_zone.name,
@@ -190,6 +194,18 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         )
         self.__connection.execute(query)
         self.__connection.commit()
+
+    def get_delivery_zone(self, delivery_zone_id: int):
+        query = delivery_zones.select().where(delivery_zones.c.id == delivery_zone_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return DeliveryZone(**row)
+
+    def get_delivery_zones(self) -> list[DeliveryZone]:
+        query = delivery_zones.select()
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [DeliveryZone(**row) for row in rows]
 
     # ***************************
     # Order
@@ -213,6 +229,30 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         cursor = self.__connection.execute(query)
         row = cursor.fetchone()
         return Order(**row)
+
+    def get_orders(self, status=None, start_date=None, end_date=None):
+        if end_date is None:
+            end_date = datetime.date(9999, 12, 31)
+        if start_date is None:
+            start_date = datetime.date(1970, 1, 1)
+
+        if status == 'delivered':
+            query = orders.select().where(orders.c.status == 1)
+        elif status == 'selected':
+            query = orders.select().where(or_(orders.c.status == 1, orders.c.status == 2))
+        elif status == 'selected_but_not_delivered':
+            query = orders.select().where(orders.c.status == 2)
+        else:
+            query = orders.select()
+
+        query = query.where(
+            orders.c.date >= start_date,
+            orders.c.date <= end_date
+        )
+
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Order(**row) for row in rows]
 
     def insert_order_product(self, order_product: OrderProduct):
         query = order_products.insert().values(
@@ -272,6 +312,9 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         row = cursor.fetchone()
         return Route(**row)
 
+    # ***************************
+    # Segment
+    # ***************************
     def insert_segment(self, segment: Segment):
         query = segments.insert().values(
             address_1_id=segment.address_1_id,
@@ -281,14 +324,32 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
-    # ***************************
-    # Segment
-    # ***************************
     def get_segment(self, segment_id: int):
         query = segments.select().where(segments.c.id == segment_id)
         cursor = self.__connection.execute(query)
         row = cursor.fetchone()
         return Segment(**row)
+
+    def get_segments(self, addresses_ids: list[int]) -> list[Segment]:
+        query = segments.select().where(
+            orders.c.address_1_id.in_(addresses_ids),
+            orders.c.address_2_id.in_(addresses_ids)
+        )
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Segment(**row) for row in rows]
+
+    def get_unrouted_segments(self, addresses_ids: list[int]) -> list[Segment]:
+        query = segments.select().where(
+            segments.c.address_1_id.in_(addresses_ids),
+            segments.c.address_2_id.in_(addresses_ids),
+            not_(segments.c.id.in_(
+                select([segment_statistics.c.segment_id])
+            ))
+        )
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Segment(**row) for row in rows]
 
     def insert_segment_statistics(self, segment_statistic: SegmentStatistics):
         query = segment_statistics.insert().values(

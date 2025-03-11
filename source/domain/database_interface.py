@@ -50,6 +50,10 @@ class DatabaseInterface(ABC):
     def get_client(self, client_id: int) -> Client:
         pass
 
+    @abstractmethod
+    def get_clients(self) -> list[Client]:
+        pass
+
     # ***************************
     # Delivery Zone
     # ***************************
@@ -65,6 +69,10 @@ class DatabaseInterface(ABC):
     def get_delivery_zone(self, delivery_zone_id: int) -> DeliveryZone:
         pass
 
+    @abstractmethod
+    def get_delivery_zones(self) -> list[DeliveryZone]:
+        pass
+
     # ***************************
     # Order
     # ***************************
@@ -78,6 +86,10 @@ class DatabaseInterface(ABC):
 
     @abstractmethod
     def get_order(self, order_id: int) -> Order:
+        pass
+
+    @abstractmethod
+    def get_orders(self, status=None, start_date=None, end_date=None) -> list[Order]:
         pass
 
     @abstractmethod
@@ -126,7 +138,7 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_segments(self, addresses_ids: list[int]) -> Segment:
+    def get_segments(self, addresses_ids: list[int]) -> list[Segment]:
         pass
 
     @abstractmethod
@@ -154,4 +166,8 @@ class DatabaseInterface(ABC):
 
     @abstractmethod
     def get_vehicle(self, vehicle_id: int) -> Vehicle:
+        pass
+
+    @abstractmethod
+    def get_vehicles(self) -> list[Vehicle]:
         pass

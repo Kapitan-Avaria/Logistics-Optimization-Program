@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, redirect, request, current_app
 from source.domain.data_operator import DataOperator
 from source.domain.map_drawer_interface import MapDrawer
-from source.domain.delivery_planner_interface import DeliveryPlannerInterface
 from source.domain.entities import *
 
 # cfg = Config()
@@ -11,7 +10,6 @@ def create_app_blueprint():
     app = Blueprint('app', __name__)
     dataop: DataOperator = current_app.config["DATA_OPERATOR"]
     map_drawer: MapDrawer = current_app.config["MAP_DRAWER"]
-    dp: DeliveryPlannerInterface = current_app.config["DELIVERY_PLANNER"]
 
     @app.route('/')
     @app.route('/index')
@@ -143,7 +141,6 @@ def create_app_blueprint():
             # vw.load_data_from_db()
             return redirect(request.referrer)
 
-
     @app.route('/edit_vehicles', methods=['GET', 'POST'])
     def edit_vehicles():
         if request.method == 'GET':
@@ -172,7 +169,6 @@ def create_app_blueprint():
             # vw.load_data_from_db()
             return redirect(request.referrer)
 
-
     @app.route('/build_routes')
     def build_routes():
         map_drawer.redraw_map()
@@ -196,7 +192,6 @@ def create_app_blueprint():
             shift_dur_c=current_app.config["DEFAULT_SHIFT_DURATION_C"],
         )
 
-
     @app.route('/load_data',  methods=['POST'])
     def load_data_from_db():
         if request.method == 'POST':
@@ -205,7 +200,6 @@ def create_app_blueprint():
             dataop.load_data_from_business_to_db()
             dataop.from_db()
         return redirect(request.referrer)
-
 
     @app.route('/run_vrp', methods=['POST'])
     def run_vrp():
