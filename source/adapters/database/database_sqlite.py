@@ -126,6 +126,9 @@ order_products = Table(
 
 
 class DatabaseSQLiteAdapter(DatabaseInterface):
+    # ***************************
+    # General methods
+    # ***************************
     def __init__(self, database_uri):
         self.metadata = metadata
         engine = create_engine(database_uri)
@@ -134,6 +137,9 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
     def create_tables(self):
         self.metadata.create_all(self.__connection)
 
+    # ***************************
+    # Address
+    # ***************************
     def insert_address(self, address: Address):
         query = addresses.insert().values(
             latitude=address.latitude,
@@ -145,12 +151,36 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_address(self, address_id: int):
+        query = addresses.select().where(addresses.c.id == address_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Address(**row)
+
+    # ***************************
+    # Client
+    # ***************************
     def insert_client(self, client: Client):
         query = clients.insert().values(
             name=client.name
         )
         self.__connection.execute(query)
         self.__connection.commit()
+
+    def get_client(self, client_id: int):
+        query = clients.select().where(clients.c.id == client_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Client(**row)
+
+    # ***************************
+    # Delivery Zone
+    # ***************************
+    def get_delivery_zone(self, delivery_zone_id: int):
+        query = delivery_zones.select().where(delivery_zones.c.id == delivery_zone_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return DeliveryZone(**row)
 
     def insert_delivery_zone(self, delivery_zone: DeliveryZone):
         query = delivery_zones.insert().values(
@@ -161,6 +191,9 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    # ***************************
+    # Order
+    # ***************************
     def insert_order(self, order: Order):
         query = orders.insert().values(
             number=order.number,
@@ -175,6 +208,12 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_order(self, order_id: int):
+        query = orders.select().where(orders.c.id == order_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Order(**row)
+
     def insert_order_product(self, order_product: OrderProduct):
         query = order_products.insert().values(
             order_id=order_product.order_id,
@@ -184,6 +223,18 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_order_product(self, order_id: int, product_id: int):
+        query = order_products.select().where(
+            order_products.c.order_id == order_id,
+            order_products.c.product_id == product_id
+        )
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return OrderProduct(**row)
+
+    # ***************************
+    # Product
+    # ***************************
     def insert_product(self, product: Product):
         query = products.insert().values(
             name=product.name,
@@ -194,6 +245,15 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_product(self, product_id: int):
+        query = products.select().where(products.c.id == product_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Product(**row)
+
+    # ***************************
+    # Route
+    # ***************************
     def insert_route(self, route: Route):
         query = routes.insert().values(
             name=route.name,
@@ -206,6 +266,12 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_route(self, route_id: int):
+        query = routes.select().where(routes.c.id == route_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Route(**row)
+
     def insert_segment(self, segment: Segment):
         query = segments.insert().values(
             address_1_id=segment.address_1_id,
@@ -214,6 +280,15 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         )
         self.__connection.execute(query)
         self.__connection.commit()
+
+    # ***************************
+    # Segment
+    # ***************************
+    def get_segment(self, segment_id: int):
+        query = segments.select().where(segments.c.id == segment_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return Segment(**row)
 
     def insert_segment_statistics(self, segment_statistic: SegmentStatistics):
         query = segment_statistics.insert().values(
@@ -228,6 +303,15 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
+    def get_segment_statistics(self, segment_id: int):
+        query = segment_statistics.select().where(segment_statistics.c.segment_id == segment_id)
+        cursor = self.__connection.execute(query)
+        row = cursor.fetchone()
+        return SegmentStatistics(**row)
+
+    # ***************************
+    # Vehicle
+    # ***************************
     def insert_vehicle(self, vehicle: Vehicle):
         query = vehicles.insert().values(
             name=vehicle.name,
@@ -237,63 +321,6 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         )
         self.__connection.execute(query)
         self.__connection.commit()
-
-    def get_address(self, address_id: int):
-        query = addresses.select().where(addresses.c.id == address_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Address(**row)
-
-    def get_client(self, client_id: int):
-        query = clients.select().where(clients.c.id == client_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Client(**row)
-
-    def get_delivery_zone(self, delivery_zone_id: int):
-        query = delivery_zones.select().where(delivery_zones.c.id == delivery_zone_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return DeliveryZone(**row)
-
-    def get_order(self, order_id: int):
-        query = orders.select().where(orders.c.id == order_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Order(**row)
-
-    def get_order_product(self, order_id: int, product_id: int):
-        query = order_products.select().where(
-            order_products.c.order_id == order_id,
-            order_products.c.product_id == product_id
-        )
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return OrderProduct(**row)
-
-    def get_product(self, product_id: int):
-        query = products.select().where(products.c.id == product_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Product(**row)
-
-    def get_route(self, route_id: int):
-        query = routes.select().where(routes.c.id == route_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Route(**row)
-
-    def get_segment(self, segment_id: int):
-        query = segments.select().where(segments.c.id == segment_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return Segment(**row)
-
-    def get_segment_statistics(self, segment_id: int):
-        query = segment_statistics.select().where(segment_statistics.c.segment_id == segment_id)
-        cursor = self.__connection.execute(query)
-        row = cursor.fetchone()
-        return SegmentStatistics(**row)
 
     def get_vehicle(self, vehicle_id: int):
         query = vehicles.select().where(vehicles.c.id == vehicle_id)
