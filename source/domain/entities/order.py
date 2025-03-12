@@ -11,5 +11,6 @@ class Order:
     date: date
     delivery_time_start: time
     delivery_time_end: time
+    delivery_zone_id: int
     comment: str
     status: int

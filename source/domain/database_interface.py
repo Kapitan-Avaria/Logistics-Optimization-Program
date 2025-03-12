@@ -100,6 +100,10 @@ class DatabaseInterface(ABC):
     def get_order_product(self, order_id: int, product_id: int) -> OrderProduct:
         pass
 
+    @abstractmethod
+    def get_order_products(self, order_id: int) -> list[OrderProduct]:
+        pass
+
     # ***************************
     # Product
     # ***************************

@@ -78,11 +78,38 @@ class DataOperator:
 
     def from_db(self):
         """Loads and builds the transportation problem data from the db"""
-        locations: list
-        demands: list
-        volumes: list
-        time_windows: list
-        vehicle_capacities: list
-        vehicle_time_windows: list
+        locations: list = []
+        demands: list = [0]
+        volumes: list = [0]
+        time_windows: list = []
+        vehicle_capacities: list = []
+        vehicle_time_windows: list = []
 
-        return
+        orders = self.db.get_orders(status=0)
+        depot_address = self.db.get_address(self.db.get_delivery_zone(orders[0].delivery_zone_id).depot_id)
+        locations.append((depot_address.latitude, depot_address.longitude))
+        time_windows.append((0, 24))
+        for o, order in enumerate(orders):
+            order_products = self.db.get_order_products(order.id)
+            for op in order_products:
+                address = self.db.get_address(order.address_id)
+                locations.append((address.latitude, address.longitude))
+                demands.append(op.quantity)
+                volumes.append(self.db.get_product(op.product_id).volume)
+                ts = order.delivery_time_start
+                te = order.delivery_time_end
+                time_windows.append((ts.hour + ts.minute / 60, te.hour + te.minute / 60))
+
+        vehicles = self.db.get_vehicles()
+        for v, vehicle in enumerate(vehicles):
+            vehicle_capacities.append(vehicle.dimensions)
+            vehicle_time_windows.append((0, 24))
+
+        return Problem(
+            locations=locations,
+            demands=demands,
+            volumes=volumes,
+            time_windows=time_windows,
+            vehicle_capacities=vehicle_capacities,
+            vehicle_time_windows=vehicle_time_windows
+        )

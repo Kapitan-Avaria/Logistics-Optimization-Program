@@ -59,7 +59,7 @@ def create_app_blueprint():
                 if new_v is None:
                     continue
                 current_app.config[k] = new_v
-            dataop.from_db()
+            # dataop.from_db()
             return redirect(request.referrer)
 
     @app.route('/edit_orders', methods=['GET', 'POST'])
@@ -198,7 +198,7 @@ def create_app_blueprint():
             if 'url_business_api_input' in request.form.keys() and request.form['url_business_api_input'] != '':
                 current_app.config["URL_BUSINESS_API"] = request.form['url_business_api_input']
             dataop.load_data_from_business_to_db()
-            dataop.from_db()
+            # dataop.from_db()
         return redirect(request.referrer)
 
     @app.route('/run_vrp', methods=['POST'])
