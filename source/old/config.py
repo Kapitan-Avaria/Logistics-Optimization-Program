@@ -15,12 +15,12 @@ class Config:
             try:
                 base_path = sys._MEIPASS
             except Exception:
-                base_path = os.path.abspath(".")
+                base_path = os.path.abspath("..")
 
             return os.path.join(base_path, relative_path)
 
-        self.path = resource_path('data/config.cfg')
-        self.path_loc = resource_path('data/config_loc_ru.cfg')
+        self.path = resource_path('../data/config.cfg')
+        self.path_loc = resource_path('../data/config_loc_ru.cfg')
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
