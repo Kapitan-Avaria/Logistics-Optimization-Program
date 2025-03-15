@@ -7,4 +7,6 @@ class Vehicle:
     name: str
     category: str
     dimensions: dict
-    weight_capacity: int
+    volume_capacity: float
+    weight_capacity: float
+    depot_id: int

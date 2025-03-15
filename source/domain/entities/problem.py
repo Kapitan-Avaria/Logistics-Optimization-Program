@@ -9,5 +9,6 @@ class Problem:
     time_windows: list
     vehicle_capacities: list
     vehicle_time_windows: list
+    distance_evaluator: object
 
 

@@ -161,6 +161,12 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         row = cursor.fetchone()
         return Address(**row)
 
+    def get_depots(self):
+        query = addresses.select().where(addresses.c.delivery_zone_id is None)
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Address(**row) for row in rows]
+
     # ***************************
     # Client
     # ***************************
@@ -201,8 +207,11 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         row = cursor.fetchone()
         return DeliveryZone(**row)
 
-    def get_delivery_zones(self) -> list[DeliveryZone]:
-        query = delivery_zones.select()
+    def get_delivery_zones(self, depot_id=-1) -> list[DeliveryZone]:
+        if depot_id != -1:
+            query = delivery_zones.select().where(delivery_zones.c.depot_id == depot_id)
+        else:
+            query = delivery_zones.select()
         cursor = self.__connection.execute(query)
         rows = cursor.fetchall()
         return [DeliveryZone(**row) for row in rows]
@@ -230,7 +239,7 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         row = cursor.fetchone()
         return Order(**row)
 
-    def get_orders(self, status=None, start_date=None, end_date=None):
+    def get_orders(self, status=None, depot_id=-1, start_date=None, end_date=None):
         if end_date is None:
             end_date = datetime.date(9999, 12, 31)
         if start_date is None:
@@ -244,6 +253,15 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
             query = orders.select().where(orders.c.status == 2)
         else:
             query = orders.select()
+
+        if depot_id != -1:
+            query = query.where(
+                orders.c.address_id == select(addresses.c.id).where(
+                    addresses.c.delivery_zone_id == select(delivery_zones.c.id).where(
+                        delivery_zones.c.depot_id == depot_id
+                    )
+                )
+            )
 
         query = query.where(
             orders.c.date >= start_date,
@@ -324,8 +342,11 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         self.__connection.execute(query)
         self.__connection.commit()
 
-    def get_segment(self, segment_id: int):
-        query = segments.select().where(segments.c.id == segment_id)
+    def get_segment(self, address_1_id: int, address_2_id: int):
+        query = segments.select().where(
+            segments.c.address_1_id == address_1_id,
+            segments.c.address_2_id == address_2_id
+        )
         cursor = self.__connection.execute(query)
         row = cursor.fetchone()
         return Segment(**row)
@@ -388,3 +409,12 @@ class DatabaseSQLiteAdapter(DatabaseInterface):
         cursor = self.__connection.execute(query)
         row = cursor.fetchone()
         return Vehicle(**row)
+
+    def get_vehicles(self, depot_id=-1) -> list[Vehicle]:
+        if depot_id != -1:
+            query = vehicles.select().where(vehicles.c.depot_id == depot_id)
+        else:
+            query = vehicles.select()
+        cursor = self.__connection.execute(query)
+        rows = cursor.fetchall()
+        return [Vehicle(**row) for row in rows]

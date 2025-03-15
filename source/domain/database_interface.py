@@ -36,6 +36,14 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
+    def get_addresses(self) -> list[Address]:
+        pass
+
+    @abstractmethod
+    def get_depots(self) -> list[Address]:
+        pass
+
+    @abstractmethod
     def get_ungeocoded_addresses(self) -> list[Address]:
         pass
 
@@ -70,7 +78,7 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_delivery_zones(self) -> list[DeliveryZone]:
+    def get_delivery_zones(self, depot_id=-1) -> list[DeliveryZone]:
         pass
 
     # ***************************
@@ -89,7 +97,7 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_orders(self, status=None, start_date=None, end_date=None) -> list[Order]:
+    def get_orders(self, status=None, depot_id=-1, start_date=None, end_date=None) -> list[Order]:
         pass
 
     @abstractmethod
@@ -119,6 +127,10 @@ class DatabaseInterface(ABC):
     def get_product(self, product_id: int) -> Product:
         pass
 
+    @abstractmethod
+    def get_products(self) -> list[Product]:
+        pass
+
     # ***************************
     # Route
     # ***************************
@@ -138,7 +150,7 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_segment(self, segment_id: int) -> Segment:
+    def get_segment(self, address_1_id: int, address_2_id: int) -> Segment:
         pass
 
     @abstractmethod
@@ -173,5 +185,5 @@ class DatabaseInterface(ABC):
         pass
 
     @abstractmethod
-    def get_vehicles(self) -> list[Vehicle]:
+    def get_vehicles(self, depot_id=-1) -> list[Vehicle]:
         pass

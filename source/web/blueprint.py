@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, request, current_app
-from source.domain.data_operator import DataOperator
+from source.data_operator import DataOperator
 from source.domain.map_drawer_interface import MapDrawer
 from source.domain.entities import *
 
